@@ -8,19 +8,24 @@
 </script>
 <hr class="comment">
 <section class="comment">
+<!-- An element a visitor can click if they <3 comments! -->
+<button class="btn show-comments">Load Disqus comments</button>
 <div id="disqus_thread"></div>
-    <script type="text/javascript">
-        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
-        var disqus_shortname = 'lotaboutvimwiki'; // required: replace example with your forum shortname
+ 
+<!-- The empty element required for Disqus to loads comments into -->
+<!--<div id="disqus_thread"></div>-->
+    <!--<script type="text/javascript">-->
+        <!--/* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */-->
+        <!--var disqus_shortname = 'lotaboutvimwiki'; // required: replace example with your forum shortname-->
 
-        /* * * DON'T EDIT BELOW THIS LINE * * */
-        (function() {
-            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script>
-    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+        <!--/* * * DON'T EDIT BELOW THIS LINE * * */-->
+        <!--(function() {-->
+            <!--var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;-->
+            <!--dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';-->
+            <!--(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);-->
+        <!--})();-->
+    <!--</script>-->
+    <!--<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>-->
 </section>
 
 <footer>
@@ -31,7 +36,6 @@
     <script src="assets/js/jquery-1.7.1.min.js"></script>
     <script>
 $(document).ready(function(){
-    $(function () {
 	var offset = 100;
 	var duration = 500;
 
@@ -41,28 +45,46 @@ $(document).ready(function(){
                 toc.css('position', 'static')
 	        return
             }
-        });
-        $(window).scroll(function () {
+            });
+        $(window).scroll(
+            function () {
+            console.log("scroll called.")
             var toc= $('#table-of-contents')
             if ($(window).width() <= 800) {
-                toc.css('position', 'static')
-	        return
+            toc.css('position', 'static')
+            return
             }
 
-                toc.css('left', toc.position().left + 'px')
-                toc.css('position', 'fixed')
-                $('.back-to-top').fadeIn(duration);
+            if ($(this).scrollTop() > duration) {
+            toc.css('left', toc.position().left + 'px')
+            toc.css('position', 'fixed')
+            $('.back-to-top').fadeIn(duration);
             } else {
-                toc.css('left', '0px')
-                toc.css('top', '0px')
-                toc.css('position', 'relative')
-                $('.back-to-top').fadeOut(duration);
+            toc.css('left', '0px')
+            toc.css('top', '0px')
+            toc.css('position', 'relative')
+            $('.back-to-top').fadeOut(duration);
             }
-        });
-        $('.back-to-top').click(function(event) {
-	    event.preventDefault;
-	    $('html, body').animate({scrollTop: 0}, duration);
-	    return false;
-	});
-    });
+            });
+        $('.back-to-top').click(
+            function(event) {
+            event.preventDefault;
+            $('html, body').animate({scrollTop: 0}, duration);
+            return false;
+            });
+
+        $('.show-comments').on('click', function(){
+                               var disqus_shortname = 'lotaboutorgwiki'; // Replace this value with *your* username.
+
+                               // ajax request to load the disqus javascript
+                               $.ajax({
+type: "GET",
+url: "http://" + disqus_shortname + ".disqus.com/embed.js",
+dataType: "script",
+cache: true
 });
+                               // hide the button once comments load
+                               $(this).fadeOut();
+                               });
+});
+    </script>

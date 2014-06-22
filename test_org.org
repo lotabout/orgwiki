@@ -59,7 +59,7 @@ this is a paragraph [fn:1]
 (save-excursion                  (ref:sc)
    (goto-char (point-min)))      (ref:jump)
 #+END_SRC
-In line (sc) we remember the current position.  Line (jump)
+In line [[(sc)]] we remember the current position.  Line [[(jump)]]
 jumps to point-min.[fn:2]
 
 * insert math
