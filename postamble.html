@@ -1,44 +1,68 @@
+<a href="#" class="back-to-top">Back to Top</a>
+
+<!-- <hr class="comment"> -->
+<!-- <div id="show_source"> -->
+<!--   <input type="button" value="Show Org source" onClick='show_org_source()'> -->
+<!-- </div> -->
+
+</script>
 <hr class="comment">
-<!-- <section class="comment"> -->
-<!-- <div id="disqus_thread"></div> -->
-<!--     <script type="text/javascript"> -->
-<!--         /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */ -->
-<!--         var disqus_shortname = 'lotaboutvimwiki'; // required: replace example with your forum shortname -->
+<section class="comment">
+<div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'lotaboutvimwiki'; // required: replace example with your forum shortname
 
-<!--         /* * * DON'T EDIT BELOW THIS LINE * * */ -->
-<!--         (function() { -->
-<!--             var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true; -->
-<!--             dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js'; -->
-<!--             (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq); -->
-<!--         })(); -->
-<!--     </script> -->
-<!--     <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript> -->
-<!-- </section> -->
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</section>
 
-  <div id="show_source"><input type="button" value="Show Org source" onClick='show_org_source()'></div>
 <footer>
-    由<a href="http://orgmode.org">Org Mode</a>自动生成，采用<a
-        href="http://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>授权。
+    |由<a href="http://orgmode.org">Org Mode</a>自动生成<input type="button" value="Show Org source" onClick='show_org_source()'>
+    |采用<a href="http://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>授权|
 </footer>
+
     <script src="assets/js/jquery-1.7.1.min.js"></script>
     <script>
 $(document).ready(function(){
     $(function () {
+	var offset = 100;
+	var duration = 500;
+
+        $(window).resize(function () {
+            var toc= $('#table-of-contents')
+            if ($(window).width() <= 800) {
+                toc.css('position', 'static')
+	        return
+            }
+        });
         $(window).scroll(function () {
             var toc= $('#table-of-contents')
-            if (toc.css('position') == 'static') {
-                return
+            if ($(window).width() <= 800) {
+                toc.css('position', 'static')
+	        return
             }
-            if ($(this).scrollTop() > 100) {
+
                 toc.css('left', toc.position().left + 'px')
                 toc.css('position', 'fixed')
-    
+                $('.back-to-top').fadeIn(duration);
             } else {
                 toc.css('left', '0px')
                 toc.css('top', '0px')
                 toc.css('position', 'relative')
+                $('.back-to-top').fadeOut(duration);
             }
         });
+        $('.back-to-top').click(function(event) {
+	    event.preventDefault;
+	    $('html, body').animate({scrollTop: 0}, duration);
+	    return false;
+	});
     });
 });
-</script>

@@ -1,0 +1,78 @@
+#+TITLE: Test Org Syntax
+* This is the index file
+This repos aimed at demonstrating how to export org files to html.
+
+* Example Contents
+** WATING Head 2                                                :HOME:OFFICE:
+*** Heading 3
+This is a sample paragraph.
+<2014-06-22 Sun>
+
+** TODO Head 2
+   DEADLINE: <2014-06-22 Sun> SCHEDULED: <2014-06-22 Sun>
+  
+we'll have embeded code here: =(apply + '(1 2 3 4))=.
+
+Here we'll include a list.
+
+- item 1
+  - subitem 1
+  - subitem 2
+- item 2
+  1. ordered item 1
+  2. ordered item 2
+     - mixed item 1
+     - mixed item 2
+     HELLO :: This is a description node
+     WORLD :: another one.
+  3. ordered item 3.
+- item 3
+
+#+BEGIN_EXAMPLE
+Some example from a text file.
+#+END_EXAMPLE
+
+Another plain inline example:
+Here is an example
+   : Some example from a text file.
+
+  
+* Links
+File links ended with `org` will be converted to html.
+remember
+
+Image link:
+#+CAPTION: This is the caption for the next figure link (or table)
+#+NAME:   fig:SED-HR4049
+[[file:image/test.jpg]]
+
+#+BEGIN_SRC emacs-lisp
+(defun org-xor (a b)
+  "Exclusive or."
+  (if a (not b) b))
+#+END_SRC
+
+* Test of footer
+this is a paragraph [fn:1]
+
+#+BEGIN_SRC emacs-lisp -n -r
+(save-excursion                  (ref:sc)
+   (goto-char (point-min)))      (ref:jump)
+#+END_SRC
+In line (sc) we remember the current position.  Line (jump)
+jumps to point-min.[fn:2]
+
+* insert math
+This is also a test.
+\begin{equation}
+x=\sqrt{b}
+\end{equation}
+
+If $a^2=b$ and \( b=2 \), then the solution must be
+either $$ a=+\sqrt{2} $$ or \[ a=-\sqrt{2} \].
+
+
+* Footnotes
+
+[fn:1] This is still a test.
+[fn:2] Another footnote.

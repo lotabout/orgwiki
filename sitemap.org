@@ -1,0 +1,6 @@
+#+TITLE: Sitemap for project org-notes
+
+   + [[file:theindex.org][Index]]
+   + [[file:index.org][Mark Wallace's Wiki]]
+   + [[file:remember.org][remember]]
+   + [[file:test_org.org][Test Org Syntax]]

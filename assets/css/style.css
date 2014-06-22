@@ -197,6 +197,23 @@ li {
     }
 }
 
+.back-to-top {
+    position: fixed;
+    bottom: 1em;
+    right: 0px;
+    text-decoration: none;
+    color: #000000;
+    background-color: rgba(235, 235, 235, 0.80);
+    font-size: 12px;
+    padding: 1em;
+    display: none;
+}
+
+.back-to-top:hover {    
+    background-color: rgba(135, 135, 135, 0.50);
+}
+
+
 hr.comment {
     border: 0;
     height: 1px;
@@ -235,7 +252,8 @@ nav a:hover {
     float:right;
     margin:0.5em;
     padding:1em;
-    background-color:#eee;
+    background-color: #eee;
+    background-color: rgba(238, 238, 238, 0.5);
     position: relative;
     max-height: 80%;
 }
