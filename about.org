@@ -3,4 +3,6 @@
 2. 站点部署在[[https://github.com/lotabout/orgwiki][Github]] 上。
 3. 模板受[[http://phpstone.com/wiki/index.html][frePerl's wiki notes]] 启发，感谢原作者
 4. 有什么想对我说的话，可以直接在此处留言，或者发邮件到lotabout@gmail.com
-5. 想查看所有页面的话，点击右上角的[[file:sitemap.org][SiteMap]](站点地图)试试吧。 
+5. 想查看所有页面的话，点击右上角的[[file:sitemap.org][SiteMap]](站点地图)试试吧。
+6. 感兴趣的话，看看[[file:how_wiki_is_built.org][这个站点是怎么搭起来]]
+   的吧。
