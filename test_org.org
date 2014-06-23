@@ -1,3 +1,4 @@
+#+OPTIONS: p:t
 #+TITLE: Test Org Syntax
 * This is the index file
 This repos aimed at demonstrating how to export org files to html.
@@ -9,7 +10,7 @@ This is a sample paragraph.
 <2014-06-22 Sun>
 
 ** TODO Head 2
-   DEADLINE: <2014-06-22 Sun> SCHEDULED: <2014-06-22 Sun>
+   SCHEDULED: <2014-06-22 Sun>
   
 we'll have embeded code here: =(apply + '(1 2 3 4))=.
 
