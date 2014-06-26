@@ -1,0 +1,28 @@
+#+TITLE: Emacs Notes
+
+* Notes on the manual
+** Quick Movement
+   1. =M-g c=: read a number N and move point to buffer position N.
+   2. =M-g g=: goto-line N.
+** Cursor position information
+   1. =C-x ==: Display the information of the character after point.
+   2. =M-==: Display the number of lines, words, and characters of a region.
+** Repeate a command
+   use =C-x z= (repeat).
+** Search history of inputs
+   1. =M-r REGEXP <RET>= similar to =C-r= in bash.
+   2. =M-s REGEXP <RET>= forward search.
+** Funny Help Entries:
+   1. =C-h e= to bring "*Message*" Buffer.
+   2. =C-h h= to display "HELLO" file.
+   3. =C-h l= to display a description of your last 300 keystrokes(=view-lossage=).
+   4. =C-h w COMMAND <RET>= to show keys run the command named COMMAND (=where-is=).
+   5. =C-h c KEY= displays in the echo area the name of the command
+      that KEY is bound to.
+** Mark and the region
+
+* FAQs
+** How to insert not graphic characters?
+1. Insert =C-q= First.
+2. =C-x 8 <RET> <unicode>= to insert unicode characters.
+

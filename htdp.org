@@ -1,0 +1,216 @@
+#+TITLE: How to Design Programs Notes
+
+* Design Functions
+** Information and Data
+Information can be thought as facts about the program's domain, while data is
+just a "literal" representation.
+
+Take temperature as an example. `100` is only a prepresentation or data. We
+know nothing only by looking at this literal. When the data is `interpretted`
+in the domain of temperature, we know it means 100C or 100F. On the other
+hand, computers or programs cannot understand 100C or 100F directly. We then
+can `represent` it as a number `100` or strings link `100C` or `100F`, these are
+what computers can understand.
+
+** Process of Designing Functions
+*->* This process can be guideline of writing comments for functions.
+
+- Express how information is represented as data.
+  #+BEGIN_EXAMPLE
+  ; we use plain numbers to represent temperatures.
+  #+END_EXAMPLE
+- Write down a signature, a purpose statement, and a function header.
+  A _signature_ is like `haskell`'s function type.
+  #+BEGIN_EXAMPLE
+  ; String -> Number
+  #+END_EXAMPLE
+  _Purpose statement_ is a short line to describe the purpose of a function. A
+  better way to express this is to use descriptive names for functions.
+  _Function Header_ is the header of a function without its implementation.
+- Illustrate the signature and the purpose statement with some functional
+  examples.
+  #+BEGIN_EXAMPLE
+  ; Number -> Number                                      ; signature
+  ; compute the area of a square whose side is len        ; purpose
+  ; given: 2, expect: 4                                   ; examples
+  ; given: 7, expect: 49
+  (define (area-of-square len) 0)                         ; header
+  #+END_EXAMPLE
+
+- The next step is considering what and how are we going to compute. This is
+  done by inserting *templates* in the function body(for example, the ones
+  introduced in the following chapters).
+- Now _code_. Fill in the information needed by the template and other
+  details.
+- Last one: Test the functions. (in racket or other script languages, directly
+  make some unit test cases is quite simple, do it!)
+  
+** Domain Knowledge
+   Two forms of _domain knowledge_:
+   - Knowledge from external domains.
+   - Knowledge about the library functions in the chosen programming language.
+
+*** From Functions to Programs
+The `car` problem: Design a program that moves a car across the world canvas,
+from left to right, at the rate of three pixels per clock tick.
+
+How to tare down the problem into program elements:
+1. Find out constant staff and assign them to global constant variables.
+2. Find out properties that change over time. Design how to represent them with
+   data. (can we call them _states_?)
+3. Design a number of functions to handle al these variable properties.
+4. write a _main_ function so as to connect real world to our programs.
+  
+We can conclude it into 4 elements when designing:
+1. global states(constants).
+2. data representation for states.
+3. actions to handle states.
+4. main function.
+
+*** Designing World Programs
+    Why is modifying the sample problem and adding mouse event handler
+    is so straightforward? First it strictly separate the *model*(the
+    data that a program tracks) and the *view*(how the program show
+    results). Second is the design recipes for programs and functions
+    organize programs in the right way.
+    
+    This teaches us two leason: 
+    1. separate our modules.
+    2. correctly organize our design recipes.(including data and
+       functions, etc.)
+       
+* Intervals, Enumerations, Itemizations
+  Why we need these? Often, we'll need to design programs with
+  restrictions on our built-in collections. One way to restrict it is
+  to enumerate a bunch of elements form a collection and to say that
+  these are the only ones that we are going to use. However,
+  enumeration will work only under finite number of elements, thus we
+  need intervals for "infinately" many elements.
+  
+** Conditional Computations
+   Review the =cond= expression:
+   #+BEGIN_SRC scheme
+     (cond
+      [condition-expr-1 result-expr-1]
+      [condition-expr-2 result-expr-2]
+      ...
+      [condition-expr-n result-expr-n])
+   #+END_SRC
+   In may problem contexts, a function must distinguish several
+   different situations. With a =cond= expression expression, you can
+   use one line per possiblity and thus _remaind the reader of the
+   code of the different situations from the problem statement_.
+
+   Contrast =cond= with =if=. we use =if= is more suited when we want
+   to say "one or the other".
+   
+   Note that even if we can code with either one and the result is OK,
+   don't do it! Codes are read not only by machine, but also by
+   human. Thus express the idea directly and clearly is important.
+   
+   For example, in C language, using =switch= would be more expressive
+   than nested =if= statements.
+   
+** How it works
+   #+BEGIN_QUOTE
+   Just looking at the =cond= expression you cannot predict which of
+   the three =cond= clause is going to be used._And that is the point
+   of a function._
+   #+END_QUOTE
+
+   
+** Enumerations
+   The main idea of an enumeration is that it defines a collection of
+   data as a *finite* number of pieces of data. So we can iterate
+   through all its possibilities with a =cond= branch. This is the
+   *template* of dealing with enumerations.
+   
+   Example(From the book):
+#+BEGIN_SRC scheme
+; A TrafficLight shows one of three colors:
+; – "red"
+; – "green"
+; – "yellow"
+; interp. each element of TrafficLight represents which colored
+; bulb is currently turned on
+
+; TrafficLight -> TrafficLight
+; given state s, determine the next state of the traffic light
+ 
+(check-expect (traffic-light-next "red") "green")
+ 
+(define (traffic-light-next s)
+  (cond
+    [(string=? "red" s) "green"]
+    [(string=? "green" s) "yellow"]
+    [(string=? "yellow" s) "red"]))
+#+END_SRC
+   There are 3 states of =TrafficLight=, thus we generate 3 =cond= branches.
+   
+   *->* [[http://www.ccs.neu.edu/home/matthias/HtDP2e/part_one.html#%28counter._%28figure._fig~3acond-enum%29%29]]
+   
+   Note the difference between these two implementation. The book
+   talked about the _re-order_ of the condition lines. It also says
+   that _Naturally, this kind of re-arrangement is done *after* the
+   function is designed properly._
+   
+   I think the *essence* here is maintain the information of the same
+   level in the same level of =cond= expression. That means in this
+   =cond= we only cares about the information: what keys do we care
+   about? And condition =( = (string-length k) 1)= do not belong to
+   this class of informaiton, thus we through it into the =else=
+   branch. And we may generate a sub =cond= expression in =else=
+   branch if needed.
+   
+** Intervals
+   The main concept here contains two parts:
+   1. the difference between _interval_ and _enumeration_ is
+      _interval_ may contain *infinate* number of elements.
+   2. However, we can represent _intervals_ in *finite* cases, each
+      can be specified by a boundary check function.
+   
+   That means when contruct =cond= expression for these two cases, the
+   main difference is how to write the _condition expressions_.
+   #+BEGIN_SRC scheme
+     ; for enumeration
+     (define (iter-enumeration x)
+       (cond
+        [(= x 1) 1]
+        [(= x 2) 2]
+        [else 3]))
+
+     ; for intervals
+     (define (iter-interval x)
+       [(< x 10) 1]
+       [(< x 100) 2]
+       [else 3])
+
+     ; the main difference here is *=* and *<*
+   #+END_SRC
+   
+** Itemization
+
+* Lists
+
+  #+BEGIN_QUOTE
+    Then again, if this list is supposed to represent a record with a fixed
+    number of pieces, use a structure type instead.
+  #+END_QUOTE
+    
+This means that when designing programs, use lists oly when the number of
+items is variable. Otherwise, choose _struct_, _vector_, etc. instead.
+
+* Designing With Self-referential Data Definitions
+
+This chapter talks about the design of new self-referential data(or
+recursively defined data). And how to walk through all the elements of a
+specific data.
+
+Also the book gave out a "template" for designing functions for
+self-referential data.
+
+*->* Most data structures comes with a patter, and there also exists a pattern
+ of how to deal with it. This is what we called a template.
+[[http://www.ccs.neu.edu/home/matthias/HtDP2e/part_two.html#%28counter._%28figure._fig~3adesign5%29%29|Designing a function for self-referential data]]
+
+

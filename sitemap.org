@@ -1,8 +1,12 @@
 #+TITLE: Sitemap for project org-notes
 
    + [[file:about.org][about]]
+   + [[file:emacs_notes.org][Emacs Notes]]
+   + [[file:htdp.org][How to Design Programs Notes]]
    + [[file:theindex.org][Index]]
    + [[file:index.org][Mark Wallace's Wiki]]
    + [[file:remember.org][remember]]
    + [[file:test_org.org][Test Org Syntax]]
+   + [[file:Thinking_In_Cpp.org][Thinking In C++ Notes]]
+   + [[file:Unix_Network_Programming_v2.org][UNIX Network Programming Vol.2 Notes]]
    + [[file:how_wiki_is_built.org][本站是如何搭建的]]

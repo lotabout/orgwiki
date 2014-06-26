@@ -1,0 +1,65 @@
+#+TITLE: Thinking In C++ Notes
+* C in C++
+** temporary variables
+In C++, variables can be defined anywhere in the source file. For
+example:
+#+BEGIN_SRC cpp
+  for (int i = 0; i < N; i++) {
+      /* some sentences */
+  }
+#+END_SRC
+Note that we can also define variables in =while= statements, which
+however is *wrong* most of the time.
+#+BEGIN_SRC cpp
+  while (char c = cin.get() != 'q') {
+      /* some statements */
+  }
+#+END_SRC
+Operator *=* has higer precedence then *!=*, thus variable =c= will
+get a bool value. Now we'll want to add parenthesises like this:
+#+BEGIN_SRC cpp
+  while ((char c = cin.get()) != 'q') {
+      /* some statements */
+  }
+#+END_SRC
+This on the other hand is *syntax error*.
+
+** Linking with internal/external variables.
+   There are two styles of linkage: internal linkage and external
+   linkage. External linkage means the symbol is accessable
+   throughtout the whole program and internal linkages means that it
+   is only accessable in one translation unit.
+
+[1] [[http://stackoverflow.com/questions/1358400/what-is-external-linkage-and-internal-linkage-in-c][What is external and internal linkage in C++]]
+
+   
+** Turn variable and statements into string
+   Use cpp macro feature: '#':
+#+BEGIN_SRC cpp
+  #define PR(x) cout << #x " = " << x << "\n";
+#+END_SRC
+   and it will print out statements and their values correctly.
+   
+** Complecated declarations and definitions
+   read the definition from right to left and recursively.
+   #+BEGIN_SRC cpp
+     void *(*(*fp1)(int))[10];
+     /* fp1 is a pointer to a function which takes an int as its argument
+      ,* and return a pointer to an array of 10 elements, each element is a
+      ,* pointer to void. */
+     float (*(*fp2)(int, int, float))(int);
+     /* fp2 is a pointer to a function, which takes 3 arguments: (int, int,
+      ,* float), and returns a pointer to a function, which takes 1
+      ,* argument: (int) and returns a float */
+     typedef double (*(*(*fp3)())[10])();
+     fp3 a;
+     /* fp3 is a type, this type refers to a pointer to a function, which
+      ,* takes no arguments: (), and returns a pointer to an array of 10
+      ,* elements, each element is a pointer to a function, which takes no
+      ,* arguments: () and return a double. */
+     int (*(*f4())[10])();
+     /* f4 is a function, which takes no arguments: () and returns a
+      ,* pointer to an array of 10 elements, each element is a pointer to a
+      ,* function, which takes no arguements and return an integer. */
+   #+END_SRC
+** 

@@ -1,0 +1,101 @@
+#+title: UNIX Network Programming Vol.2 Notes
+#+OPTIONS: toc:1
+
+* Chap01: Introduction
+  
+** Introduction
+   The evolution of IPC(interprocess of communication)
+- pipe :: unsed in programs or shells. Can be used only between
+          processes with common ancestors. _FIFO_ broke this limit.
+- System V message queue :: can be used between processes no matter
+     they are related or not under _the same host_.
+- Posix message queue :: Almost the same to System V message queue.
+- RPC(Remote procedure call) :: Provide a mechanism for clients to
+     call some functions of the server.
+
+We can see that the range of IPC increases with evolution. From
+processes with common ancester to thoses in different hosts.
+     
+The evolution of Synchronization Mechanisms.
+- Hidden features of filesystem
+- record locking
+- System V semaphore.
+- Posix semaphore
+- mutex and condition variable.
+- read-write lock.
+
+** Sharing Information Between Processes and Threads
+   
+There are 3 ways of sharing: through kernel(like sharing with files);
+in kernel(pipes); without kernel(shared memory).
+
+** Persistence of IPC Object
+   The *Presistence* of any type of IPC is how long an object of that
+   type remains in existence.
+
+- process-persistent IPC :: exists until last process with IPC object
+     open closes the object. (pipes and FIFOs.)
+- kernel-persistent IPC :: exists until kernel reboots or IPC object
+     is explicitly deleted. (System V message queue, semaphores, and
+     shared memories)
+- filesystem-persistent IPC :: exists until IPC object is explicitly deleted.
+
+Note the difference between the place where IPC information was kept
+and the existence of IPC object. For example, pipes are kept by the
+kernel but exists with the existence of process.
+
+Normally, no IPCs were designed with filesystem-presistence. First, no
+processes survive the reboot. Second, requiring filesystem persistence
+might degrade the preformance.
+
+* Posix IPC
+** Introduction
+   There are 3 types of POSIX IPC:
+   - Posix message queue
+   - Posix semaphores
+   - Posix shared memory
+   They are common in: the pathnames used for identification, the
+   flags specified when opening or creatign, and the access permission.
+* System V IPC
+  There are three types of System V IPC:
+  - System V message queues,
+  - System V semaphores, and
+  - System V shared memory.
+    
+** key_t Keys and ftok Function
+   System V IPC use =key_t= values for their names. The header
+   <sys/types.h> defines the =key_t= datatype as an integer, which is
+   normally at least 32 bits long.
+   
+   The function =ftok= converts an _existing_ pathname and an integer
+   identifier into =key_t= value.
+   
+   Client and server are able to generate the same =key_t= value once
+   they agree on the =pathname= and =id=.
+
+** ipc_perm Structure
+   It is used by the kernel to maintain the information for each IPC
+   object, similar to the information it maintains for files.
+   
+* Pipes and FIFOs
+
+** Introduction
+   The fundamental limitation of pipe is that they have NO name.
+
+** Full Duplex Pipe
+   It depends on the system's support. Check first if you wants to
+   make use of it.
+
+** FIFO
+   
+1. when calling =mkfifo= to create FIFO, it will create a new fifo or
+   return =EEXIST= if the named FIFO already exists.
+2. FIFO should be open by calling =open= system call.
+3. When reading from FIFO, it will block the process. So be careful
+   not to block both the server and the client. (reorder the calling
+   of =read= and =write=).
+4. Call =unlink= to remove FIFO from the filesystem. Note that kernel
+   keeps a reference count of the number of open descriptors that
+   refer to the pipe or FIFO. Thus, when calling =unlink=, it will not
+   affect open descriptors that had previously opened the pathname.
+
