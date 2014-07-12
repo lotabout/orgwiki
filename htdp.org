@@ -189,7 +189,71 @@ We can conclude it into 4 elements when designing:
    #+END_SRC
    
 ** Itemization
+   An interval distinguishes different subclasses of numbers; an
+   enumeration spells out item for item the useful elements of an
+   existing class of data.
 
+   Does the _NorF_ example indicate that itemization is an abstraction
+   that it combines different data types(Number or false) and output
+   an enumeration(type NorF)?
+
+   I think in the example of the book, itemization is just like an
+   brief version of struct or class(the LR example).
+   
+   The test cases for "launch": when a function's main purpose is to
+   iterate over "itemization", we could design their test cases
+   according to its elements.
+   
+   The test cases for "fly": Test cases for Intervals should cover two
+   boundaries and the one inside it.
+   
+** Designing With Itemization
+   6 steps of designning probrolems(with itemization):
+   1. When the problem statement distinguishes different classes of
+      input information, you need carefully formulated data definitions.
+   2. Add functions(signature, purpose statement, function header).
+   3. Pick at least one example for testing. The example should cover
+      cover each subclass in the data definition. That means at least
+      one for each subclass, and if the class is a range, be sure to
+      pick examples from the boundaries of the range and from its iterior.
+   4. Write down a _template_ that mirrors the organization of
+      subclasses with a =cond=
+   5. For each =cond= line, fill in the code solving the sub-problem.
+   6. Finally, run tests and make sure that the tests cover all =cond= clauses.
+
+* Adding Structure
+  Structure is a way of gluing information that belong to a unified
+  concept. For example, a name, a phone number and an email address
+  all belong to the concept of "contact".
+  
+** Structures
+   Structure is like a container, we can put multiple objects in it,
+   and extract a single object from it at the same time. So we have a
+   *constructor* and *extractor* for structs.
+   
+   
+** The Universe of Data
+   It is often best to illustrate data definition with examples just
+   like we illustrate the behavior of functions with examples:
+   - for a built-in collection of data(number, string, etc.), choose
+     your favorite examples.
+   - for an enumeration, use several of the items of the enumeration;
+   - for intervals, use the end points(if included) and at least one
+     interior point
+   - for itemizations, deal with each part separately;
+   - for data definitions for structures, follow the natural language
+     description, that is, use the constructor and pick an example
+     from the data collection named for each field.
+
+* Itemizations and Structures
+  This chapter refine the design recepie. Two important concept here:
+  template and wish list.
+  
+  Template of dealing with a certain kind of structure(itemization or
+  lists in later chapter) reveals the essence of the it. Wish list is
+  a way to destruct a problem by pretending that we had some features
+  and implement them later.
+   
 * Lists
 
   #+BEGIN_QUOTE
@@ -209,8 +273,194 @@ specific data.
 Also the book gave out a "template" for designing functions for
 self-referential data.
 
-*->* Most data structures comes with a patter, and there also exists a pattern
+*->* Most data structures comes with a pattern, and there also exists a pattern
  of how to deal with it. This is what we called a template.
 [[http://www.ccs.neu.edu/home/matthias/HtDP2e/part_two.html#%28counter._%28figure._fig~3adesign5%29%29|Designing a function for self-referential data]]
 
+6 steps of designing a function:
+1. problem analysis -> data definition
+2. header -> signature; purpose; statement; dummy definition
+3. example -> examples and tests.
+4. template -> function template
+5. definition -> full-fledged definition
+6. test -> validated test.
 
+** Non-empty Lists
+   It is critical to have unified concept.
+
+   For the definition below:
+   #+BEGIN_SRC scheme
+     ; A List-of-tmperatures is one of:
+     ; - empty
+     ; - (cons CTemperature List-of-temperatures)
+
+     ; A CTemperature is a Number greater or equal to -256
+   #+END_SRC
+   It will lead to inconsistancy when the List is =empty=. Define an
+   =average= function for example
+   #+BEGIN_SRC scheme
+     ; List-of-tempeartures -> Number
+     ; compute the average tempearture
+     (define (average alot)
+       (/ (sum alot)
+          (how-many alot)))
+   #+END_SRC
+   
+   One solution is treat this definition as an itemization:
+   #+BEGIN_SRC scheme
+     ; List-of-temperatures -> Number
+     ; compute the average tempearture
+     (define (average alot)
+       (cond
+        [(empty? alot) 0]
+        [else (/ (sum alot)
+                 (how-many alot))]))
+   #+END_SRC
+   However, this will break our intuition that List-of-temperatures is
+   self-referential and should be treated as it is. This =cond= clause
+   broke this intuition.
+   
+   So, a better way would be refine the definition:
+   #+BEGIN_SRC scheme
+     ; A NEList-of-temperatures is one of:
+     ; – (cons CTemperature empty)
+     ; – (cons CTemperature NEList-of-temperatures)
+     ; interp.: non-empty lists of measured temperatures
+   #+END_SRC
+   
+   Note that both solution works. We'll treat the first one as a
+   programming trick, the second as remoldeling. We're building
+   software not only to make the work but reflect our literal concept
+   as well. So, clarity and consistency of concept is capital.
+
+* Design By Composition
+  This chapter talks about when to design several function and hwo to
+  compose theme into one program.
+  
+  There are some common tasks of processing data. It is convenient to
+  have some utility function to finish these tasks.
+
+** Composing Functions
+   This book explains that programs are collections of definitions:
+   structure type definitions, data definitions, constant definitions,
+   and function definitions.
+   
+   A rough guideline for dividing labor among functions:
+   #+BEGIN_QUOTE
+   Formulate auxiliary function definitions for every dependency
+   between quantities in the problem statement. In short, design one
+   function per task.
+   
+   Formulate auxiliary function definitions when one data definition
+   points to a second data definition. Roughly, design one template
+   per data definition.
+   #+END_QUOTE
+
+   Turning a template into a complete functino definition means
+   combining the values of the template's subexpressions into the
+   final answer. As you do so, you might encounter several situations
+   that suggest the need for auxiliary functions:
+   1. If the composition of values requires knowledge of a particular
+      domain of application.
+   2. If the =cond= expression for case analysis is too complex.
+   3. If the composition of values must process an element from a
+      self-referential data definition.
+   4. If everything fails, you may need to design a *more general*
+      function and define the main function as a specific use of the
+      general function.
+      
+   Keeping wish lists is actually learning how to de-struct a problem
+   into several small pieces. Each entry is represented as function
+   header as described before(signature, purpose, header, etc.).
+   
+* Similarities Everywhere
+
+** Similarities In Functions
+   "Good programmers are too lazy to define several closely related
+   functions".
+
+** More Similarities In Functions
+   Normally, function abstration is done by finding out the difference
+   between functions and replace them as function calls, these
+   functions are new parameters we should add to the abstracted functions.
+   
+   Using abstracted function is similar to using Macro in C
+   langauge. It saves typing and has control over all instances. If
+   there is a bug in abstracted function, fix it will fix all instances.
+
+   Also it's convenient to create new instances by our need once we have
+   abstracted functions.
+   
+** Similarities In Data Definition
+   For the following two data definition:
+   #+BEGIN_SRC scheme
+     ; A List-of-numbers(short Lon) is one of: ; A List-of-String(short Los) is one of:
+     ; - empty                                 ; - empty
+     ; - (cons Number List-of-numbers)         ; - (cons Number List-of-String)
+   #+END_SRC
+   
+   We can abstract it as:
+   #+BEGIN_SRC scheme
+     ; A [List-of ITEM] is one of:
+     ; - empty
+     ; - (cons ITEM [List-of ITEM])
+   #+END_SRC
+   We call such abstract data definition _paracmetric data definition_
+   because of  the parameter.
+   
+   *->* Is this similar to Haskell's data definition and Monad?
+   
+* Designing Abstraction
+  In essence, to abstract is to turn something concrete into a parameter.
+  
+** Abstractions From Examples
+   1. *to compare* two items for similarities.
+   2. *to abstract*: to replace the contents of similarities with new
+      names and add these names to the parameter list.
+   3. Now we must validate that the new function is correct. *to test*
+      means to define the two original functions in term of the abstraction.
+   4. Add *signature* to abstractions.
+      
+** Single Point Of Control
+   That means we should formulate an abstractions and instantiate them
+   whever needed. Thus we'll have only a single point of control: the abstraction.
+   
+   #+BEGIN_QUOTE
+   Creating Abstrations: Form an abstraction instead of copying and
+   modifying any piece of a program.
+   #+END_QUOTE
+   
+** Abstractions From Templates
+   Templates are themselves abstractions of operations on data. And
+   function abstractions can be thought as code representation of the template.
+   
+   Instead of abstracting from similar functions, abstracting directly
+   from templates should be more intuitive.
+   
+* Nameless Functions
+
+** lambda, Technically
+  Once we view _lambda_ as the primitive concept, functions becomes
+  first class value. And function definitions are just syntax suger
+  for define a lambda values. And _lambda_ is like a constructor.
+  #+begin_src scheme
+    (define (f x)
+      (+ (sin x) x (* 3 x)))
+    ; is syntax suger for the following:
+    (define f
+      (lambda (x)
+        (+ (sin x) x (* 3 x))))
+  #+end_src
+
+** Abstracting With lambda II
+   It is very powerful once we treat function as data. We can
+   represent information as functions. And cosntructor of these kind
+   of data would generate functions instead of classical data types
+   like numbers, strings, etc. Check the book for example.
+
+* The Poetry Of s-expressions
+  Intertwineded data means the combination of different data types
+  such as finite data and self-referential data. This chapter take
+  'Tree', 'forest' and 'S-expressions' as example, then talks about
+  how to simplify functions.
+  
