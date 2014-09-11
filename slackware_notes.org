@@ -1,0 +1,8 @@
+#+TITLE: Slackware Notes
+
+* FAQs
+** How to send soft rfkill(especially when using USB card with PC)
+   There is a commandline tool called =rfkill=, that would do.
+   
+   =rfkill block wlan= to block all wlan device.
+   =rfkill unblock wlan= to unblock all wlan device.

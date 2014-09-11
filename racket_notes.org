@@ -1,0 +1,135 @@
+#+TITLE: Racket Notes
+
+* Installation
+  
+** readline support failure
+   
+   Fail when =(require readline)= or =(require xrepl)=. With following
+   error message.
+   
+   #+BEGIN_EXAMPLE
+     ; Warning: no readline support (ffi-lib: couldn't open "libreadline.so.5" (/usr/lib64/libreadline.so.5: undefined symbol: PC)
+   #+END_EXAMPLE
+   
+   In slackware, use =LD_PRELOAD=/usr/lib64/libcurses.so racket= instead.
+
+* Racket Guide Notes
+** Classes
+*** Class Declaration
+   Use =Class= Expression to denote a first-class value:
+#+BEGIN_SRC racket
+  (class superclass-expr decl-or-expr ...)
+
+  ; Example
+  (class object%  ; object% is the super class
+    (init size)   ; initialization arguments
+    (define current-size size) ; note that clause order matters
+    (define/public (get-size)  ; public method
+      current-size)
+    (super-new))  ; superclass initialzation, should always be called.
+#+END_SRC
+*** Public Methods
+   Public methods are called by =(send instance method arguments ...)=
+*** Initialization arguments
+   Initialization arguemnts are specified like the following:
+   #+BEGIN_SRC racket
+     (define default-10-fish%
+       (class fish%
+         (init [size 10])
+         (super-new [size size])))
+   #+END_SRC
+*** Interfaces
+   Interfaces are declared by:
+   #+BEGIN_SRC racket
+     (interface (superinterface-expr ...) id ...)
+   #+END_SRC
+   To declare that a class implements an interface, the =class*= form
+   must be used instead of =class=:
+   #+BEGIN_SRC racket
+     (class* superclass-expre (interface-expre ...) decl-or-expr ...)
+   #+END_SRC
+   Example:
+   #+BEGIN_SRC racket
+     (define fish-interface (interface () get-size grow eat))
+     (define fish% (class* object% (fish-interface) ...))
+   #+END_SRC
+*** Final, Augment, and Inner
+* Racket Reference
+** for
+   =for= clause will not run at all if no sequence is specified:
+   #+BEGIN_SRC scheme
+     (with-input-from-string "appleppppl"
+       (lambda ()
+         (for (#:break (eof-object? (peek-char (current-input-port))))
+           (printf "~a~n" (regexp-match #rx"p+(.)" (current-input-port))))))
+   #+END_SRC
+   Instead, feed it with an infinite sequence:
+   #+BEGIN_SRC scheme
+     (with-input-from-string "appleppppl"
+       (lambda ()
+         (for ([i (in-naturals 1)]
+               #:break (eof-object? (peek-char (current-input-port))))
+           (printf "~a~n" (regexp-match #rx"p+(.)" (current-input-port))))))
+   #+END_SRC
+   
+   Note that the position of =#:when=, =#:unless=, =#:break=,
+   =#:final= matters. As the document says, if one of the above
+   appears, racket will refactor the =for= clause with:
+   #+begin_src scheme
+     (for (for-clauses-above ...)
+       (when guard-expr
+         (for (for-clause-remains ...) body ...+)))
+   #+END_SRC
+   That would suprise you somehow, consider the following example(from
+   the reference):
+   #+begin_src scheme
+     (for ([i '(1 2 3)]
+           [j "abc"]
+           #:break (not (odd? i))
+           [k '(1 2 3)])
+       (display (list i j k)))
+   #+end_src
+   it will produce =(1 a 1)(1 a 2)(1 a 3)= instead of =(1 a 1)=, if
+   the latter is what you expected, check the following code:
+   #+begin_src scheme
+     (for ([i '(1 2 3)]
+           [j "abc"]
+           [k '(1 2 3)]
+           #:break (not (odd? i)))
+       (display (list i j k)))
+   #+end_src
+
+* Topics
+** Memoized
+   Define function that uses a hash table to memorized computed arguemnts.
+   
+   First, define a macro for that:
+   #+BEGIN_SRC racket
+     (define-syntax define-memoized
+       (syntax-rules ()
+         [(define-memoized (f args ...) body ...)
+          (define f
+            (let ([ht (make-hash)])
+              (lambda (args ...)
+                (hash-ref! ht (list args ...) (thunk body ...)))))]))
+   #+END_SRC
+   
+   Note that the =thunk= in the above code. It is needed due to the
+   behaviour of =hash-ref!= of racket, you can of course use the
+   following instead:
+   #+BEGIN_SRC racket
+     (lambda (args ...)
+       (define tmp (list args ...))
+       (when (not (hash-has-key? ht tmp))
+         (hash-set! ht tmp (begin body ...)))
+       (hash-ref ht tmp))
+   #+END_SRC
+   
+   And then define functions using =define-memoized=:
+   #+BEGIN_SRC racket
+     (define-memoized (mfibo n)
+       (cond
+         [(= n 0) 1]
+         [(= n 1) 1]
+         [else (+ (mfibo (- n 1)) (mfibo (- n 2)))]))
+   #+END_SRC

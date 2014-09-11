@@ -1,0 +1,45 @@
+#+TITLE: C++ Notes
+
+* objects
+** How to make =static= entries global
+   
+   Suppose you have an object file: =foo.o=. Then you can check symbol
+   table by:
+   
+   #+BEGIN_SRC sh
+     objdump -t foo.o
+   #+END_SRC
+   
+   Output as follows:
+   #+BEGIN_EXAMPLE
+     $ objdump -t lib.o
+
+     lib.o:     file format elf64-x86-64
+
+     SYMBOL TABLE:
+     0000000000000000 l    df *ABS*  0000000000000000 lib.c
+     0000000000000000 l    d  .text  0000000000000000 .text
+     0000000000000000 l    d  .data  0000000000000000 .data
+     0000000000000000 l    d  .bss   0000000000000000 .bss
+     0000000000000000 l     F .text  0000000000000014 add2
+     0000000000000000 l    d  .note.GNU-stack        0000000000000000 .note.GNU-stack
+     0000000000000000 l    d  .eh_frame      0000000000000000 .eh_frame
+     0000000000000000 l    d  .comment       0000000000000000 .comment
+     0000000000000014 g     F .text  0000000000000041 multiply
+   #+END_EXAMPLE
+   
+   You can see that =add2= is local symbol which is indicated by the
+   flag =l=, while =multiply= is global symbol by flag =g=.
+   
+   Save the symbols you want to globalized to a text file:
+   #+BEGIN_EXAMPLE
+     $ cat foobar 
+     add2 
+   #+END_EXAMPLE
+   
+   And Use =objcopy= to create a new object file for use.
+   #+begin_src sh
+     $ objcopy --globalize-symbols=foobar lib.o lib2.o
+   #+end_src
+
+- [[http://stackoverflow.com/questions/9806282/is-it-possible-to-override-static-functions-in-an-object-module-gcc-ld-x86-o][is it possible to override static functions]]

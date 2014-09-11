@@ -1,11 +1,15 @@
 #+TITLE: Sitemap for project org-notes
 
    + [[file:about.org][about]]
+   + [[file:C++_Notes.org][C++ Notes]]
+   + Color Scheme Colection [[file:color_schemes.org][配色收集]]
    + [[file:emacs_notes.org][Emacs Notes]]
    + [[file:htdp.org][How to Design Programs Notes]]
    + [[file:theindex.org][Index]]
    + [[file:index.org][Mark Wallace's Wiki]]
+   + [[file:racket_notes.org][Racket Notes]]
    + [[file:remember.org][remember]]
+   + [[file:slackware_notes.org][Slackware Notes]]
    + [[file:test_org.org][Test Org Syntax]]
    + [[file:Thinking_In_Cpp.org][Thinking In C++ Notes]]
    + [[file:Unix_Network_Programming_v2.org][UNIX Network Programming Vol.2 Notes]]
