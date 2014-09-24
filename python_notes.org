@@ -1,0 +1,110 @@
+#+TITLE: python Notes
+
+Notes Using Python./Python使用笔记。
+
+* Input/Output
+
+  Two ways of formatting:
+  1. concatinate strings manually.
+  2. using =str.format()=
+     
+  Two ways to convert any value to a string: pass it to the =repr()=
+  or =str()= functions. =str()= is meant to generate results that are
+  human-readable while =repr()='s result is for interpreter.
+  
+  =str.zfill()= pads a numeric string on the left with zeros. It
+  understands about plus and minus signs:
+  #+BEGIN_SRC python :exports both :results output
+    print '12'.zfill(5)
+    print '-3.14'.zfill(7)
+    print '3.14159265359'.zfill(5)
+  #+END_SRC
+
+  #+RESULTS:
+  : 00012
+  : -003.14
+  : 3.14159265359
+  
+** String Format
+   Basic Usage:
+   #+begin_src python :exports both :results output
+     print 'We are the {} who says "{}!"'.format('Knights', 'Ni')
+   #+end_src
+
+   #+RESULTS:
+   : We are the Knights who says "Ni!"
+   
+   The '{}' is called "format field", it can refer to fields by number
+   or keywords:
+   
+   #+begin_src python :exports both :results output
+     print '{0} and {1}'.format('spam', 'eggs')
+     print '{1} and {0}'.format('spam', 'eggs')
+
+     print 'This {food} is {adjective}.'.format(food = 'spam', adjective =
+                                                'absolutly horrible')
+   #+end_src
+
+   #+RESULTS:
+   : spam and eggs
+   : eggs and spam
+   : This spam is absolutly horrible.
+   
+   =!r= to retrieve =repr()= output and =!s= for =str()=
+
+   #+begin_src python :exports both :results output
+     import math
+     print 'The value of PI is approximately {}.'.format(math.pi)
+     print 'The value of PI is approximately {!r}.'.format(math.pi)
+   #+END_SRC
+
+   #+RESULTS:
+   : The value of PI is approximately 3.14159265359.
+   : The value of PI is approximately 3.141592653589793.
+   
+   Check [[https://docs.python.org/2/tutorial/inputoutput.html][Input
+   and Output]] for more information.
+   
+   Also, the complete syntax for formatting string is:
+   #+BEGIN_EXAMPLE
+     replacement_field ::=  "{" [field_name] ["!" conversion] [":" format_spec] "}"
+     field_name        ::=  arg_name ("." attribute_name | "[" element_index "]")*
+     arg_name          ::=  [identifier | integer]
+     attribute_name    ::=  identifier
+     element_index     ::=  integer | index_string
+     index_string      ::=  <any source character except "]"> +
+     conversion        ::=  "r" | "s"
+     format_spec       ::=  <described in the next section>
+   #+END_EXAMPLE
+   Check
+   [[https://docs.python.org/2/library/string.html#format-string-syntax][Format
+   String Syntax]] for more information.
+
+** Methods of File Operation
+   
+   =read=: To read a file's contents, call =f.read(size)=, which will return a
+   string. =size= is optional, while omitted or negative, the entire
+   contens of the file will be read and returned.
+   
+   =readline=: reads a single line from the file, and the newline
+   character '\n' will be left at the end of the string. If the
+   returned string is empty, the it has reached the end of the
+   file. While a blank line is represented by '\n', a string
+   containing only a single newline.
+   
+   If you want to read all the lines of a file in a list, you can also
+   use =list(f)= or =f.readlinesf()=
+   
+   =write=: =f.write(string)= writes =string= to the file, returning =None=.
+   
+   =tell= and =seek=: to deal with file offset.
+   #+BEGIN_SRC python
+     >>> f = open('test.txt', 'w+')
+     >>> f.write('0123456789abcdef')
+     >>> f.seek(5)     # go to the 6th byte in the file
+     >>> f.read(1)
+     '5'
+     >>> f.seek(-3, 2) # go to the 3rd byte before the end
+     >>> f.read(1)
+     'd'
+   #+END_SRC
