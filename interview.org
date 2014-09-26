@@ -100,6 +100,19 @@
    : sizeof(vec(100)) = 24
    : sizeof(cvec(100)) = 24
 
+** 如何防止类被实例化
+   1. Make the class an abstract class by including at least one _pure
+      virtual_ function.
+   2. Make the constructor of a class private, and then create a
+      static function which will return some instantances of the
+      class. If only one instance of the class is allowed, we should
+      also keep a reference to this instance in the class
+** 如何防止类被继承
+   Reasons of preventing derived classes:
+   1. Mark a class as non-subclassable so you can safely use a
+      non-virtual destructor and avoid a vtable altogether.
+      
+   - [[http://stackoverflow.com/questions/2184133/prevent-class-inheritance-in-c][Prevent class inheritance in C++]]
 * Python
 ** 装饰器 Decorator
    python 中的decorator本质上就是包装函数 =wrap= ，以被包装函数 =fn=

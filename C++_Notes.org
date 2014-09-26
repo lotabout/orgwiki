@@ -1,15 +1,21 @@
 #+TITLE: C++ Notes
 
+* Utils
+
+** g++ show V-table
+   Type =g++ -fdump-class-hierarchy xx.cpp= and it will generate a
+   =.class= file.
+
 * objects
 ** How to make =static= entries global
-   
+
    Suppose you have an object file: =foo.o=. Then you can check symbol
    table by:
-   
+
    #+BEGIN_SRC sh
      objdump -t foo.o
    #+END_SRC
-   
+
    Output as follows:
    #+BEGIN_EXAMPLE
      $ objdump -t lib.o
@@ -27,19 +33,561 @@
      0000000000000000 l    d  .comment       0000000000000000 .comment
      0000000000000014 g     F .text  0000000000000041 multiply
    #+END_EXAMPLE
-   
+
    You can see that =add2= is local symbol which is indicated by the
    flag =l=, while =multiply= is global symbol by flag =g=.
-   
+
    Save the symbols you want to globalized to a text file:
    #+BEGIN_EXAMPLE
-     $ cat foobar 
-     add2 
+     $ cat foobar
+     add2
    #+END_EXAMPLE
-   
+
    And Use =objcopy= to create a new object file for use.
    #+begin_src sh
      $ objcopy --globalize-symbols=foobar lib.o lib2.o
    #+end_src
 
 - [[http://stackoverflow.com/questions/9806282/is-it-possible-to-override-static-functions-in-an-object-module-gcc-ld-x86-o][is it possible to override static functions]]
+* Syntax/Compilation
+** Variable and Segment
+   In Linux, use =nm a.out= or =objdump -t a.out= to display symbols.
+   #+begin_src cpp
+     int a = 1;
+     int b = 0;
+     int c;
+     int d[] = {0,0,0,0,0};
+     int e[] = {0,0,0,0,5};
+     int f[5];
+     static int g = 20;
+     static int h;
+
+     int main(int argc, char *argv[])
+     {
+         int i = 1;
+         int j = 0;
+         int k;
+         int l[] = {0,0,0,0,0};
+         int m[] = {0,0,0,0,5};
+         int n[5];
+         static int o = 20;
+         static int p;
+         return 0;
+     }
+   #+end_src
+
+   Symbols as follows(Upper case means the symbol is global/external):
+   #+begin_example
+     0000000000600a60 D a
+     0000000000600aa0 B b
+     0000000000600ae4 B c
+     0000000000600ab0 B d
+     0000000000600a70 D e
+     0000000000600ad0 B f
+     0000000000600a84 d g
+     0000000000600ac4 b h
+     0000000000600a88 d o.1736
+     0000000000600ac8 b p.1737
+   #+end_example
+
+   There are following rules.
+   1. All normal local variables(without static) are allocated on stack.
+   2. Initialized variable are stored in *Data* segment(D/d). Note
+      that if a variable is initialized to =0=, it is treated as
+      non-initialized(variable b, d).
+   3. Non-initialized variables are stored in *BSS* segment.
+   4. all static variables are treated as global defined variable
+      except that they are not visible outside their module(file or function).
+
+** Variable Scope
+   A variable is visiable immediately after its declaration:
+   #+begin_src C :results output
+     #include <stdio.h>
+     int a = 1;
+     int b = 10;
+     int main(int argc, char *argv[])
+     {
+         printf("%d\n", a);
+         int a = 2;
+         printf("%d\n", a);
+
+         int b = b; /* b remains undefined */
+         printf("%d\n", b);
+         return 0;
+     }
+
+   #+end_src
+
+   #+RESULTS:
+   : 1
+   : 2
+   : 0
+
+** Parameter Order
+   Note that the evaluation order of the parameters of C/C++ is from
+   right to left:
+   #+begin_src C :results output
+     #include <stdio.h>
+
+     int func1() {printf("Function 1\n"); return 1;}
+     int func2() {printf("Function 2\n"); return 1;}
+
+     void func3(int a, int b) {return;}
+
+     int main(int argc, char *argv[])
+     {
+         int b = 3;
+         int arr[] = {6,7,8,9,10};
+         int *ptr = arr;
+         printf("%d, %d\n", *ptr, *(++ptr));
+
+         printf("%d, %d\n", func1(), func2());
+
+         func3(func1(), func2());
+         return 0;
+     }
+
+   #+end_src
+
+   #+RESULTS:
+   : 7, 7
+   : Function 2
+   : Function 1
+   : 1, 1
+   : Function 2
+   : Function 1
+
+** Big/Little endian
+   #+begin_src C
+     #include <stdio.h>
+
+     int main(int argc, char *argv[])
+     {
+         unsigned int tmp = 0x01020304;
+         char *b = (char *)&tmp;
+         printf("%x %x %x %x\n", *b, *(b+1), *(b+2), *(b+3));
+
+         /* big endian    => 1 2 3 4
+            little endian => 4 3 2 1 */
+
+         return 0;
+     }
+   #+end_src
+
+** extern C
+   When C++ make uses of C compiled libraries =extern "C"= should be
+   added. This is because C++ allows function overload. Suppose we
+   have C function =void foo(int x, int y)=, C compiled library will
+   have symbol name like =_foo=, after adding =extern "C"=, C++ will
+   have names like =_foo_int_int= which include its parameter information.
+
+** mutable
+   =mutable= is a keyword in C++ and is used to describe class members
+   to allow =const= member functions to modify it.
+
+   #+begin_src cpp
+     #include <iostream>
+     #include <string>
+     using namespace std;
+     class Student{
+         string Name;
+         int time_of_getname;
+     public:
+         Student(char *name){
+             Name = name;
+             time_of_getname = 0;
+         }
+         string get_name() {
+             time_of_getname ++;
+             return Name;
+         }
+     };
+     int main(int argc, char *argv[])
+     {
+         const Student xx("Foo Bar");
+         cout << xx.get_name() << endl; // error, const object calls non-const function
+         return 0;
+     }
+   #+end_src
+
+   Then set =get_name= to const function and =time_of_getname= to
+   mutable(otherwise compilation will fail):
+
+   #+begin_src cpp
+     #include <iostream>
+     #include <string>
+     using namespace std;
+     class Student{
+         string Name;
+         mutable int time_of_getname;
+     public:
+         Student(char *name){
+             Name = name;
+             time_of_getname = 0;
+         }
+         string get_name() const {
+             time_of_getname ++;
+             return Name;
+         }
+     };
+     int main(int argc, char *argv[])
+     {
+         const Student xx("Foo Bar");
+         cout << xx.get_name() << endl; // error, const object calls non-const function
+         return 0;
+     }
+   #+end_src
+
+** sizeof
+   1. Empty class have size of *1 byte*.
+   2. If a class includes virtual function, or it uses virtual inherit
+      it will add a pointer to a virtual table, thus need one more
+      pointer.
+   3. =static= member do not count when calculating =sizeof=.
+   4. Other members are counted like =struct= for data alignment.
+   5. Derived class will have all members of its parents.
+
+   #+begin_src cpp :results output
+     #include <iostream>
+     using namespace std;
+
+     class Empty {};
+     class Derived1: public Empty {};
+     class Derived2: public Empty {};
+     class Multiple: public Derived1, public Derived2 {};
+
+     class A: virtual public Empty {};
+     class C: public A, public Derived1 {};
+
+     class Virtual {virtual void display() {}};
+
+     class Static{
+         int a;
+         static int not_count;
+     };
+
+     class Normal{
+         int i;
+         char c;
+         double d;
+         char cc;
+     };
+
+
+     int main(int argc, char *argv[])
+     {
+         cout << "In 64bit System" << endl;
+         cout << "sizeof(Empty class):\t" << sizeof(Empty) << endl;
+         cout << "sizeof(Derived class):\t" << sizeof(Derived1) << endl;
+         cout << "sizeof(Multiple):\t" << sizeof(Multiple) << endl;
+         cout << "sizeof(Multiple of virtual):\t" << sizeof(C) << endl;
+         cout << "sizeof(virtual):\t" << sizeof(Virtual) << endl;
+         cout << "sizeof(Static):\t" << sizeof(Static) << endl;
+         cout << "sizeof(Normal):\t" << sizeof(Normal) << endl;
+         cout << "sizeof(virtual inherit):\t" << sizeof(A) << endl;
+         return 0;
+     }
+   #+end_src
+
+   #+RESULTS:
+   : In 64bit System
+   : sizeof(Empty class):	1
+   : sizeof(Derived class):	1
+   : sizeof(Multiple):	2
+   : sizeof(Multiple of virtual):	16
+   : sizeof(virtual):	8
+   : sizeof(Static):	4
+   : sizeof(Normal):	24
+   : sizeof(virtual inherit):	8
+
+   A brief summary of struct alignment.
+   1. Members are aligned to the next multiplications of their size. For
+      example, =short= must be aligned to =addr%2 == 0=, =double=
+      should be aligned to =addr%2 == 8=, etc.
+   2. The size of struct is the multiple of the maximal size of its member.
+   3. If a struct contains another struct, the final size of the
+      struct is the multiple of the maximal size of all members of the
+      struct recursively.
+   #+begin_src C :results output
+     /* in Linux 64-bit machine, sizeof(long double) = 16 */
+     #include <stdio.h>
+     struct NonEmpty {char c; long double d; char f;};
+     struct Sub {
+         struct NonEmpty a;
+         char b;
+     };
+
+     int main(int argc, char *argv[])
+     {
+         printf("%d\n", sizeof(struct NonEmpty));
+         printf("%d\n", sizeof(struct Sub));
+         return 0;
+     }
+   #+end_src
+
+   #+RESULTS:
+   : 48
+   : 64
+
+   *Reference for structure padding*
+   - [[http://www.catb.org/esr/structure-packing/][Structure Padding]]
+   - [[http://www.geeksforgeeks.org/structure-member-alignment-padding-and-data-packing/][Structure Member Alignment]]
+
+** const
+   C++ do not allow empty const variable while c do;
+   #+begin_src C
+     int main(int argc, char *argv[])
+     {
+         const int i;  // Compile error in C++ while OK in C
+         return 0;
+     }
+   #+end_src
+* Classes
+** Inheritance
+   A derived class can access all the non-private member of its base
+   class. Thus the base-class members that should not be accessible to
+   the member functions of derived class should be declared private in
+   the base class
+
+   | Access          | Public | Protected | Private |
+   |-----------------+--------+-----------+---------|
+   | Same class      | yes    | yes       | yes     |
+   | Derived classes | yes    | yes       | no      |
+   | Outside classes | yes    | no        | no      |
+
+   A derived class inherits all base class methods with the following
+   *exceptions*:
+   - Constructors, desctructors and copy constructors of the base
+     class.
+   - Overloaded operators of the base class.
+   - The friend functions of the base class.
+
+   *References*
+   - [[http://www.tutorialspoint.com/cplusplus/cpp_inheritance.htm][C++ Inheritance]]
+
+** Virtual Function
+   Virtual function come into place where member function overriding
+   exists. Normally, C++ will call the member function according to
+   the type of current object.
+   #+begin_src cpp :results output
+     #include <iostream>
+     using namespace std;
+
+     class B
+     {
+     public:
+         void display()
+             { cout << "Content of base class.\n"; }
+     };
+
+     class D : public B
+     {
+     public:
+         void display()
+             {cout << "Content of derived class.\n"; }
+     };
+
+     int main(int argc, char *argv[])
+     {
+         B *b;
+         D d;
+         d.display();
+
+         b = &d; /* convert pointer to derived object to base class */
+         b->display();
+         return 0;
+     }
+   #+end_src
+
+   #+RESULTS:
+   : Content of derived class.
+   : Content of base class.
+
+   Even if the object =b= points to is actually a object of class =D=,
+   class =B='s member function =display= is called(member function of
+   the class that matches the type of pointer).
+
+   Virtual function gives the programmer the capability to call member
+   function of different class by a same function call depending upon
+   different context.
+
+   #+begin_src cpp :results output
+     #include <iostream>
+     using namespace std;
+
+     class B
+     {
+     public:
+         virtual void display()
+             { cout << "Content of base class.\n"; }
+     };
+
+     class D1 : public B
+     {
+     public:
+         void display()
+             {cout << "Content of first derived class.\n"; }
+     };
+
+     class D2 : public B
+     {
+     public:
+         void display()
+             {cout << "Content of second derived class.\n"; }
+     };
+
+     int main(int argc, char *argv[])
+     {
+         B *b;
+         B bt;
+         D1 d1;
+         D2 d2;
+
+         b = &bt;
+         b->display(); /* calls B's display() */
+
+         b = &d1;
+         b->display(); /* calls display() of derived class D1 */
+
+         b = &d2;
+         b->display(); /* calls display() of derived class D2 */
+         return 0;
+     }
+   #+end_src
+
+   #+RESULTS:
+   : Content of base class.
+   : Content of first derived class.
+   : Content of second derived class.
+
+   In this example, =display()= function of the three classes are
+   called with the same code.
+
+   *pure virtual function* is declared using =virtual float area() =
+   0=, Notice the =\=0= part.
+   If a class contains at least one pure virtual function, that class
+   is known as *abstract class* and cannot be instanciate.
+
+   *References*
+   - [[http://www.programiz.com/cpp-programming/virtual-functions][C++ Virtual Function]]
+
+** Virtual Destructor
+   If the destructor of the *Base* class is not virtual, then a *Base*
+   pointer to a *Derived* class will call *Base*'s destructor
+   only. Note that this behavior is actually *undefined*!. So even if
+   you have nothing to release in *Derived* class, don't do this!
+
+   Note: in a derived class, if your base class has a virtual
+   destructor, your own destructor is automatically virtual. You might
+   need an explicitly defined destructor for other reasons, but
+   there's no need to redeclare a destructor simply to make sure it is
+   virtual. No matter whether you declare it with the virtual keyword,
+   declare it without the virtual keyword, or don't declare it at all,
+   it's still virtual.
+
+   *References*
+   - [[http://en.wikipedia.org/wiki/Virtual_function#Virtual_destructors][Virtual Functions]]
+   - [[http://stackoverflow.com/questions/461203/when-to-use-virtual-destructors][When to use virtual destructors]]
+   - [[http://www.gotw.ca/publications/mill18.htm][Virtuality]]
+
+** Virtual Inheritance
+   Virtual inheritance is used to solve
+   [[http://en.wikipedia.org/wiki/Diamond_problem][Diamond Problem]].
+
+   Examples of diamond problem and solution are illustrated in [[http://en.wikipedia.org/wiki/Virtual_inheritance][Virtual Inheritance]].
+   Here I quote the example:
+   #+begin_src cpp
+     class Animal {
+     public:
+         virtual void eat();
+     };
+
+     // Two classes virtually inheriting Animal:
+     class Mammal : public virtual Animal {
+     public:
+         virtual void breathe();
+     };
+
+     class WingedAnimal : public virtual Animal {
+     public:
+         virtual void flap();
+     };
+
+     // A bat is still a winged mammal
+     class Bat : public Mammal, public WingedAnimal {
+     };
+   #+end_src
+   Normally, inheritance without virtual keyword would make =Bat= a
+   =<Mammal, WingedAnimal>= object. Thus there exists two instance of
+   the grand-class =Animal=. With virtual inheritance, =Bat= will
+   include only one instance of =Animal= and add some information to
+   =Mammal= and =WingedAnimal=, that makes =Bat= like this: =<vpointer,
+   Mammal, vpointer, WingedAnimal, Bat, Animal>=.
+
+   Take the above into account when calculating the size of a class.
+
+** constant member functions
+   Declaring a member function with the =const= keyword specifies that
+   the function is a "read-only" function that does not modify the
+   object for which it is called. A constant member function cannot
+   modify any non-static data members or call any member function that
+   are't constant.
+
+   It's like a mechanism to ensure that the function has no side-effect.
+
+   Note that =const= object can only call member functions that are =const=.
+   #+begin_src cpp
+     // constant_member_function.cpp
+     class Date
+     {
+     public:
+         Date( int mn, int dy, int yr ){
+             month = mn;
+         };
+         int getMonth() const;     // A read-only function
+         void setMonth( int mn );   // A write function; can't be const
+     private:
+         int month;
+     };
+
+     int Date::getMonth() const
+     {
+         return month;        // Doesn't modify anything
+     }
+     void Date::setMonth( int mn )
+     {
+         month = mn;          // Modifies data member
+     }
+     int main()
+     {
+         Date MyDate( 7, 4, 1998 );
+         const Date BirthDate( 1, 18, 1953 );
+         MyDate.setMonth( 4 );    // Okay
+         BirthDate.getMonth();    // Okay
+         // BirthDate.setMonth( 4 ); // C2662 Error <=
+     }
+   #+end_src
+
+   *References*
+   - [[http://msdn.microsoft.com/en-us/library/6ke686zh.aspx][Constant Member Functions]]
+** Named Constructor Idiom
+   [[http://www.parashift.com/c%2B%2B-faq-lite/named-ctor-idiom.html][What is the "Named Constructor Idiom"]]
+   Named constructor idiom provide more intuitive and/or safer
+   construction operation for user of your code. It can also be used
+   to generate objects when you make your constructor private.
+   #+begin_src cpp
+     class Base
+     {
+         Base(){}
+     public:
+         static Base generate(){ return Base(); }
+     };
+
+
+     int main(int argc, char *argv[])
+     {
+         // Base b; // Error due to private constructor.
+         Base b = Base::generate();
+         return 0;
+     }
+   #+end_src
