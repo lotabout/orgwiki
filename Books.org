@@ -3,3 +3,4 @@
 * C++
 
 - 《C++高级进阶教程》
+- _Inside the C++ Model_

@@ -1,0 +1,6 @@
+#+title: TeX/LaTeX 资源
+
+** manuals
+- [[http://gaspra.kettering.edu/dvipdfm/dvipdfm-0.12.4.pdf][dvipdfm manual]]
+- [[http://www.tug.org/TUGboat/tb30-1/tb94cho.pdf][dvipdfmx manual]]
+- [[ftp://ctan.tug.org/tex-archive/systems/pdftex/manual/pdftex-l.pdf][Pdftex manual]]

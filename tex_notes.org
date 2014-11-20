@@ -1,0 +1,762 @@
+#+title: TeX/LaTeX Notes
+
+* Plain TeX FAQs
+** How to include images
+   If you only need eps files, package =epsf= is ready to use:
+   #+begin_src tex
+     \input epsf
+     \epsfbox{subdir/fig_tex.eps}
+     % scale version
+     \epsfxsize\hsize \epsfysize=0.5\hsize \epsfbox{subdir/fig_tex.eps}
+   #+end_src
+   Or take advantage of LaTeX =graphicx= package:
+   #+begin_src tex
+     \input miniltx % add minimal latex support
+     \input graphicx.sty
+     \includegraphics[width=\hsize,height=3pc]{test/fig_tex.eps}
+   #+end_src
+** How to draw pictures
+   Generally, there are several methods:
+   1. MetaPost -- to draw pictures and later make TeX to include
+      it. It's said that it is supported only under Linux/Unix.
+   2. PSTricks -- use dvi's primitives to provide drawing
+      macros. Support both plain TeX and LaTeX. It's said to be a
+      better choice than MetaPost. However it seems to have some bus
+      working with plain TeX. For example, =\definecolor= not defined
+      is reported in TeXLive 2014. Also, there seems to be
+      uncompatible with Eplain's =color= package.
+   3. PGF/Tikz -- A package made to support both Dvips and
+      pdfTeX. Tikz is server as a (better)front end of PGF. Also
+      uncompatible with Eplain's =color= package.
+
+** Change font size in a single command
+   Regretably, plain TeX do not have convenient commands like =\large=
+   or =\tiny= in LaTeX. The closest way is the =fontch= package.
+** How to generate bookmarks in PDF
+   This means we want to have bookmarks in sidebars in PDF viewer.
+   
+   1. use pdftex's primitive =\pdfoutline=, check =pdftex='s manual
+      for more information.
+   2. Use dvi's special =\sepcial{pdf:outline ...}=.
+   3. Package =navigator= which can be used in LaTeX and plain TeX.
+      
+   An example of using =\special=:
+   #+begin_src tex
+     \chapter#1{
+      \hbox{\special{pdf: outline 1 << /Title (#1) /Dest [
+      @thispage /FitH @ypos ] >> }}%
+     }
+   #+end_src
+
+* eplain package
+
+** FAQs
+*** xetex is not compatible with color/graphic{s,x} packages
+    Given the following error:
+    #+begin_example
+      Runaway definition?
+      #1->\message {<#1>}\bgroup 
+      ! Forbidden control sequence found while scanning definition of \Ginclude@eps.
+    #+end_example
+    According to
+    [[http://tex.stackexchange.com/questions/191489/latex-graphicsx-package-with-eplain-fails-with-driver-dvipdfmx][LaTeX
+    graphic{sx} package with eplain fails with driver dvipdfmx]], this
+    error is caused by plain TeX which defines =\newif= to be
+    =\outer=. The following snippet fix it:
+    #+begin_src tex
+      \let\plainnewif=\newif
+      \def\newif{\csname plainnewif\endcsname}
+    #+end_src
+    Add them before loading =color= or =graphic{sx}= packages.
+** Generic references
+   =eplain= added support for defining generic references and way to
+   refer to them.
+*** Define Generic References
+    The Syntax is as follows:
+    #+begin_src tex
+      \definexref{<label>}{<value of label>}{<class>}
+      \definexref{sec-intro}{3.1}{section}
+    #+end_src
+    The =<value of label>= could be anything, and =<class>= is used to
+    indicate what class the reference belongs to, a "section",
+    "theorem" or whatever.
+    
+    The =<class>='s output can be defined by the control sequence
+    =\<class>word=, see the example of next section.
+*** Using generic references
+    To retrieve the value of the label defined via =\definexref=, the
+    following commands are provided:
+    1. =\refn{label}= or =\xrefn{label}=, giveout the =<value of
+       label>= of =<label>=.
+    2. =\ref{label}=, first give out the class name of =<label>= by
+       =\c word= control sequence followed by a tie, then call
+       =\refn= on label.
+    3. =\refs{labe}=, like =\ref= but add the letter 's' to the =\c word=.
+       
+    For example: 
+    #+begin_src tex
+      \def\xxxword{Orz}
+      \definexref{xxx-intro}{3.1}{xxx}
+      \definexref{xxx-next}{3.2}{xxx}
+      See \refs{xxx-intro} and \refn{xxx-next} ...
+    #+end_src
+    will produce:
+    #+begin_example
+      See Orz 3.1 and 3.2 ...
+    #+end_example
+*** Page number reference
+    1. =\xrdef{label}= to define a page number reference.
+    2. =\xref{label}= generate the text "p. pageno". Like generic
+       reference, the "p. " part can be redefined by
+       =\xrefpageword=. Default to =p. \thinspace=
+       
+** Indexing
+   Eplain provides support for generating raw material for an index,
+   and for typesetting a sorted index. A separate program must do the
+   actual collection and sorting of terms, because TeX itself has no
+   support for sorting.
+   
+   Eplain uses the program "MakeIndex". The workfow is explained as
+   follows:
+   1. For a document "foo.tex", Eplain's =\idx= command wirte raw
+      materials to "foo.idx".
+   2. MakeIndex reads "foo.idx", collect and sort the index, and
+      writes to "foo.ind".
+   3. Eplain reads and typesets "foo.ind" on a subsequent run of TeX.
+      
+   Multiple indices are supported by adjusting =\defineindex{<single
+   letter>}= command. =\defineindex{m}= will produce a command =\mdx=
+   and write contents to =foo.mdx=. The default indexing command is
+   defined by =\defineindex{i}= by Eplain.
+
+*** Indexing Terms
+    The indexing commands(to write raw materials) are provided as
+    =\sIdx= and =\Idx=. The =I= here refer to the =<single letter>=
+    when defining index commands as described in previous section. The
+    =s= version means "slient". =\Idx= version will add the index to
+    "foo.idx" file and typeset it in current position, while the
+    silent version will only add the index.
+    
+*** Indexing commands
+    1. =\sidx{term}[subterm]= makes and index entry for _term_,
+       optionally with subterm _subterm_.
+    2. =\sidxname{first}{last}[subterm]= makes an index entry for
+       "first, last". The seperator ", " is defined by =\idxnameseperator=.
+    3. =\sidxmarked\cs{term}[subterm]=, index entry is typesetted by
+       =\cs{term}= in addition to =\sidx=.
+    4. =\sidxsubmarked{term}\cs{subterm}=, typeset =subterm= by =\cs=.
+
+*** Typesetting an index
+    =\readindexfile{i}=
+   
+* XeTeX support
+** convenient xetex zhspcing font selection
+   Select font like =\rm=, =\it= etc. for chinese fonts using zhspacing.
+   Add the following codes after loading =zhspacing=
+   #+begin_src tex
+     \font\zhrmfont = "SimSun" at 10pt
+     \font\zhbffont = "SimHei" at 10pt
+     \font\zhitfont = "KaiTi" at 10pt
+     \font\zhttfont = "KaiTi" at 10pt
+
+     \def\zhfont{%
+       \ifnum\fam=\bffam \zhbffont 
+       \else\ifnum\fam=\ttfam \zhttfont
+       \else\ifnum\fam=\itfam \zhitfont  
+       \else \zhrmfont
+       \fi\fi\fi}
+   #+end_src
+
+* Gentle Introduction
+** The shape of things to come
+*** Fonts
+    Define new fonts.
+    #+begin_src tex
+    \font\bigrm = cmr10 scaled \magstep 1
+    #+end_src
+    =\magstep 1= will increase the font size for =20%=, =\magstephalf=
+    for =9.5%=.
+
+*** Units
+    |           | in(inch) | cm(centimetre) | pc(pica) |
+    | pt(point) | 72.27pt  | 28.4pt         | 12pt     |
+    
+    A _pica_ is about the distance between the baselines of two
+    consecutive lines of (unmagnified) normal text.
+
+    - ex :: The height of the letter 'x'.
+    - em :: The width of the capital letter 'M'.
+	    
+*** Page Shape
+    There are three parts of a page:
+    1. Headline: above the main text, often contains chapter title,
+       section title, or page number, etc.
+    2. Main text which includes footnotes.
+    3. Footline: might contain a page number.
+       
+    =\vfill\eject= to start a new page. =\vfill= causes any left over
+    vertical space to be gathered at the bottom of the page. =\hsize=
+    (default to 6.5in) controls the horizontal width of the text on the
+    page. The vertical analogue is =\vsize= (default to 8.9in) which is
+    the current height of the _main text_. Main texts can be shiftted
+    which is controled by =\hoffset= (default to 0) and =\voffset=
+    (default to 0).
+
+*** Paragraph Shape
+    #+caption: Some paragraph shape parameters
+    |                    Function | TeX Control Word | TeX default |
+    |-----------------------------+------------------+-------------|
+    |                         <r> |                  |             |
+    |                       width | \hsize           | 6.5in       |
+    |   indentation on first line | \parindent       | 20pt        |
+    |      distance between lines | \baselineskip    | 12pt        |
+    | distance between paragraphs | \parskip         | 0pt         |
+    
+    =\noindent= can be added at the beginning of a paragraph to avoid
+    indent only for this paticular paragraph.
+    
+    A more flexialbe way to control the width of paragraphs is to use
+    =\rightskip= and =\leftskip= to set the right and left margins of
+    paragraphs respectively. =\narrower= is handy for setting both
+    =\rightskip= and =\leftskip= to =\parindent=.
+    
+    Lines can be made with different lengths within one paragraph by
+    using =\hangindent= (default to 0pt) and =\hangafter= (default to
+    1). =\hangindent= controls the indent width, left if positive,
+    right negative. =\hangafter= controls the number of lines before
+    =\hangindent= take effect. For example =\hangafter = 6= means the
+    first =6= lines are normal while =\hangindent = -6= means the last
+    =6= lines are normal.
+    
+    The control word =\parshape= can be used to make paragraphs with a
+    great variety of shapes.
+    
+    =\vskip 1 in= is used to insert extra spaces between
+    paragraphs. =\vskip= will not insert spaces across page
+    boundaries. If you actually want to insert spaces at the top of a
+    page, you can use =vglue 1 in= instead or surround =\vskip= between
+    environment =\topinsert= and =\endinsert=:
+    #+begin_src tex
+      \topinsert
+      \vskip 1 in
+      \centerline{Figure 1}
+      \endinsert
+    #+end_src
+    Some special control word are made for convenience for making
+    small vertical skip: =\smallskip=, =\medskip=, =\bigskip=.
+    
+*** Line Shape
+    =\leftline{some text}=, =\rightline{some text}=, =\centerline{some
+    text}= and even =\line{some text}= are provide for making special lines.
+    
+    Other types of spacing can be get by using the control word =\hfil=.
+
+    It's possible to move horizontally using =\hskip= in a manner
+    analogous with =\vskip=.
+
+    The right justification can be canceled by using the control word =\raggedright=.
+*** Footnotes
+    The general pattern to make footnotes using TeX is
+    =\footnote{mark}{text}=. Some avaliable marks are =\dag=, =\ddag=,
+    =\S= and =\P=. Example: =\footnotes{${}^{21}$}{This is the footnote at the bottom of a page}=
+*** Headlines and Footlines
+    The lines for title and page numbers that go above and below the
+    main text are produced by using =\headline={...}= and
+    =\footline={...}= 
+
+    The principle is the same as using =\line=. A helpful control word
+    is =\pageno= which represents the current page number. For example:
+    =\headline={\hfil \tenrm Page \the\pageno}=. The control word
+    =\the= takes the internal value of next word if it is an
+    appropriate control word and prints it as text. =\folio= is an
+    alternative to =\the \pageno=, except that it will print roman
+    numbers when =\pageno= is negative.
+    
+    Different headlines can be produced for even and odd pages in the
+    following manner:
+    #+begin_src tex
+      \headline={\ifodd \pageno {...}\else {...} \fi}
+    #+end_src
+*** Overfull and underfull boxes
+    The badness of a line measures how badly the words are spaced and
+    is a number between 0(perfect) and 10000(horrible). There is a
+    parameter called =\hbadness= whose default value is 1000. Any line
+    whose badness is greater than =\hbadness= is reported as underfull
+    box.
+    
+    Similarily, TeX allows a line to be slightly longer than =\hsize=
+    in order to achieve a more balanced appearance. If the badness of a
+    line is greater than =\tolerance= (default to 200), TeX will add a
+    new word at the end of the line although it might exceed
+    =\hsize=. =\hfuzz= (default to 0.1pt) determines how much excess is
+    allowed. If =\hfuzz= is exceeded overfull box is reported. 
+    
+    The width of slug(boxes) is controled by =\overfullrule=. Including
+    =\overfullrule = 0 pt= in your file will preventing the printing of slugs.
+    
+    All the above concept have their vertical analogues. =\vbadness=
+    controls vertical text boxes.
+
+** Groups
+   Groups are formed by surround objecs with '{ contents }'. For
+   example: ={\bf three boldface words}=. Also, size changes can be
+   made  in the text that are only temporary:
+   #+begin_src tex
+     {
+       \hsize = 4in
+       \parindent = 0pt
+       \leftskip = 1in
+       Some text...
+       /par % This is an easy mistake to make
+            % use a \par or a blank line here to indicate the end of a paragraph
+     }
+   #+end_src
+   
+** Math
+   How to insert texts between math equations? Use =hbox=. =$x=y+1 
+   \hbox{ whenever } y = x+1$=. Note the space on either side of the
+   word within the brace.
+   
+   #+caption: Adding space to mathematical text
+   |                Name | Control Sequence |
+   |---------------------+------------------|
+   |                 <r> |                  |
+   |         Double quad | \qquad           |
+   |                Quad | \quad            |
+   |               Space | \_(space)        |
+   |         Thick space | \;               |
+   |        Medium space | \>               |
+   |          Thin space | \,               |
+   | Negative thin space | \!               |
+   
+   #+caption: Greek Characters
+   |----------+------------+-------------+---------------+--------+----------+----------+------------|
+   | \alpha   | =\alpha=   | \beta       | =\beta=       | \gamma | =\gamma= | \delta   | =\delta=   |
+   | \epsilon | =\epsilon= | \varepsilon | =\varepsilon= | \zeta  | =\zeta=  | \eta     | =\eta=     |
+   | \theta   | =\theta=   | \vartheta   | =\vartheta=   | \iota  | =\iota=  | \kappa   | =\kappa=   |
+   | \lambda  | =\lambda=  | \mu         | =\mu=         | \nu    | =\nu=    | \xi      | =\xi=      |
+   | o        | =o=        | \pi         | =\pi=         | \rho   | =\rho=   | \varrho  | =\varrho=  |
+   | \sigma   | =\sigma=   | \varsigma   | =\varsigma=   | \tau   | =\tau=   | \upsilon | =\upsilon= |
+   | \phi     | =\phi=     | \varphi     | =\varphi=     | \chi   | =\chi=   | \psi     | =\psi=     |
+   | \omega   | =\omega=   | \Gamma      | =\Gamma=      | \Delta | =\Delta= | \Theta   | =\Theta=   |
+   | \Lambda  | =\Lambda=  | \Xi         | =\Xi=         | \Pi    | =\Pi=    | \Sigma   | =\Sigma=   |
+   | \Upsilon | =\Upsilon= | \Phi        | =\Phi=        | \Psi   | =\Psi=   | \Omega   | =\Omega=   |
+   
+*** Fractions
+    =$${a+b \over c+d}$$= yields:$$a+b \over c+d$$
+    
+*** Subscript and superscript
+    =$\sum_{k=1}^nk^2$= yields: $\sum_{k=1}^nk^2$.
+    and =$\int_0^x f(t)\,dt$= will give: $\int_0^x f(t)\,dt$
+    
+*** Roots, square and otherwise
+    To typeset a square root, use =\sqrt{...}=, to make cube or other
+    roots, use =\root n \of {...}=.
+    
+    =$\sqrt{x^2+y^2}$=: $\sqrt{x^2+y^2}$
+
+    =$\root n \of {1+x^n}$=: $\root n \of {1+x^n}$
+    
+*** Lines, above and below
+    Use the construction =\overline{...}= and =\underline{...}= to put
+    line above and below expressions.
+    
+    =$\overline{x+y} = \overline{x}+\overline{y}$=: $\overline{x+y}=\overline{x}+\overline{y}$
+
+    To underline non-mathematical text, use =\underbar{...}=
+    
+*** Delimiters large and small
+    To make larger left delimiters the control words =\bigl=, =\Bigl=,
+    =\biggl= and =\Biggl= are used in front of the delimiter;
+    similarily, =\bigr=, =\Bigr=, =\biggr= and =\Biggr= are used for
+    the right delimiters. For example: =$\Bigl[$=
+    
+    Of course, you can let TeX choose the right size of delimiter by
+    using control words =\left= and =\right= before our
+    delimiters. Thus =\left[...\right]= will generate right size for
+    =[...]=. Note that =\left= and =\right= should appear in pairs.
+    
+*** proclaim
+    =\proclaim= macro is used to stating theorems, corollaries,
+    propositions and the like. 
+    #+begin_src tex
+      \proclaim Theorem 1(H.``G.''Wells). In the country of the blind, the
+      one-eyed man is king.
+    #+end_src
+    
+*** Matrices
+    Matrices are typeset using combinations of the alignment character
+    =&= and the control word =\cr= to indicate the end of the
+    line. Start with =$$\pmatrix{...}$$=.
+    #+begin_src tex
+      $$\pmatrix{
+        a & b & c & d \cr
+        b & a & c+d & c-d \cr
+        0 & 0 & a+b & a-b \cr
+        0 & 0 & ab & cd \cr
+      }$$
+    #+end_src
+    The entries can be flushed left or right with the help of =\hfill=.
+    
+    It is possible to have matrices that use other delimiters. Using
+    =\matrix= instead of =\pmatrix= will leave off the parentheses, so
+    the delimiters must be explicitly included using =\left= and =\right=
+    #+begin_src tex
+      $$\left |
+      \matrix{
+        a & b & c & d \cr
+        b & a & c+d & c-d \cr
+        0 & 0 & a+b & a-b \cr
+        0 & 0 & ab & cd \cr
+      }
+      \right | $$
+    #+end_src
+    It is even possible to use =\left.= and =\right.= to indicate the
+    delimiter is deleted(note the use of period). It is the same
+    effect to not adding delimiters at all, but it will be needed when
+    you want only opening or closing delimiter.
+    
+    =\cdots=, =\vdots= and =\ddots= can be used to insert horizontal,
+    vertical, and diagonal dots.
+
+*** Displayed Equations
+    Equation alignment is done with the alignment character =&= and
+    the control word =\cr= and =\eqalign=.
+    #+begin_src tex
+      $$ \eqalign{
+        a+b &= c+d \cr
+        x &= w+y+x \cr
+        m+n+o+p &= q \cr
+      } $$
+    #+end_src
+    
+    Displayed equations can be numbered at either the right or left
+    margin, =\eqno ...= to indicate right margin and =\leqno= for left.
+    
+    It's possible to number aligned equations by using the control
+    word =\eqalignno= and =\leqalignno=.
+    #+begin_src tex
+      $$ \eqalignno{
+        a+b &= c+d & (1)\cr
+        x &= w+y+x \cr
+        m+n+o+p &= q & * \cr
+      } $$
+    #+end_src
+   
+** All in a row
+   There are two method to align texts. The first is using tabbing
+   environment, the second is horizontal alignment environment.
+   
+*** Picking up the tab
+    First, set the tab position using =\settabs=, then a line starts
+    with the control symbol =\+= and ends with =\cr=.
+    #+begin_src tex
+      \settabs 4 \columns
+      \+ British Columbia & Alberta & Saskatchewan & Manitoba \cr
+      \+ Ontario & Quebec & New Brunswick & Nova Scotia \cr
+      \+ & Prince Edward Island & Newfoundland \cr
+    #+end_src
+    We can also set tab positions to a given string
+    #+begin_src tex
+      \settabs \+ \quad Year \quad & \quad Price \quad & \quad Dividend & \cr 
+      \+ \hfill Year \quad & \quad Price \quad & \quad Dividend \cr
+      \+ \hfill 1971 \quad & \quad 41--54 \quad & \qquad \$2.60 \cr
+      \+ \hfill 2 \quad & \quad 41--54 \quad & \qquad \$2.70 \cr
+      \+ \hfill 3 \quad & \quad 46--55 \quad & \qquad \$2.87 \cr
+      \+ \hfill 4 \quad & \quad 40--53 \quad & \qquad \$3.24 \cr
+      \+ \hfill 5 \quad & \quad 45--52 \quad & \qquad \$3.40 \cr
+    #+end_src
+    
+*** Horizontal alignemnt with more sophisticated patters
+    The general pattern in the =\halign= is as follows:
+    #+begin_src tex
+      \halign{ <template line> \cr
+      <first display line> \cr
+      <second display line> \cr
+      ...
+      <last display line> \cr
+      }
+    #+end_src
+    Both template line and display line are seperated by =&=
+    symbol. In template line, symbol =#= indicate the contents of the
+    corresponding section in display line and thus must appear in each section.
+    #+begin_src tex
+      \halign{\hskip 2 in $#$& \hfil \quad # \hfil & \qquad $#$ & \hfil \quad # \hfil \cr
+      \alpha & alpha & \beta & beta \cr
+      \gamma & gamma & \delta & delta \cr
+      \epsilon & epsilon & \zeta & zeta \cr
+      }
+    #+end_src
+    
+    Alignment can be escaped using =\noalign{...}=, this is useful
+    when adding rulers: =\noalign{\hrule}=.
+    
+    Below is a general pattern to generate table:
+    #+begin_src tex
+      $$\vbox{
+      \offinterlineskip
+      \halign{
+      \strut \vrule # & \vrule # & . . . & \vrule # \vrule \cr
+      \noalign{\hrule}
+      <first column entry> & <second column entry> & . . . & <last column entry> \cr
+      \noalign{\hrule}
+      ...
+      \noalign{\hrule}
+      <first column entry> & <second column entry> & . . . & <last column entry> \cr
+      \noalign{\hrule}
+      }
+      }$$
+    #+end_src
+    
+** Rolling your own
+   In this section, we'll create new control word.
+   
+*** The lone and short of it
+    The control word =\def= is used to define new control words. The
+    simplest form is =\def\newname{...}=. Then whenever =\newname=
+    appears in your file, it will be replaced by its definition.
+    
+*** Filling in with parameters
+    Macro with one parameter: =\def\newword#1{...}=. Then the symbol
+    =#1= may appear between braces (several times) in the definition
+    of =\newword=. *The spacing in the definition is crucial here;
+    there must be no spaces before the opening brace*.
+    
+    The parameter of a macro can be no more than one paragraph long,
+    and this is a safety feature.
+    
+    Macros with more than one parameter is trivial: =\def\talks#1#2{#1
+    talks to #2}=. Note that the parameter number should come in
+    consecutive order, that is =#1, #2, #3=, otherwise error
+    occurs. The parameter may go up to =#9=.
+
+*** By any other name
+    Use =\let \newname = \oldname= to rename control words.
+
+** Digging a little deeper
+*** Big files, little files
+    =\input filename= will cause =filename.tex= to be read immediately as
+    if the text of =filename.tex= had been part of the file that read
+    it in.
+    
+    The =\input= control word also allows the use of predesigned
+    macros, i.e. the predesigned macro will affect the file being read.
+
+*** Larger macro packages
+    The plain TeX package is contained in a _format file_
+    =plain.fmt=. Macros can be showed by =\show\macroname= in the TeX shell.
+
+*** Horizontal and vertical lines
+    We know that =\hrule= will generate a vertical line whose width is
+    the current value of =\hsize=, and then continue on with a new
+    paragraph. It is possible to specify wdith of hrule by =\hrule
+    width 5 cm= for example; also you can use =\vskip= or =\bigskip=
+    to put some space above or below the hrule:
+    #+begin_src tex      
+      \parindent = 0pt \parskip=12pt
+      Here is the text before the hrule
+      \bigskip
+      \hrule width 3 in
+      And here is some text after the hrule
+    #+end_src
+    
+    In fact, we can also specify the *height* (default to 0.4pt, the
+    amount by which the hrule extends above the baseline on which the
+    type is being set) and *depth* (default to 0pt, the amount by
+    which the hrule extends below the baseline on which the type is
+    being set). For example:
+    #+begin_src tex
+      \hrule width 3 in height 2 pt depth 3pt
+    #+end_src
+    The above three parameter may be given in any order.
+
+    A vrule may be defined analogously to an hrule by specifying the
+    =width=, =height= and =depth=. But unlike hrule, it will not
+    automatically start a new paragraph when it appears, and has 0.4pt
+    width by default and the same height with a line on which it is
+    being set.
+    
+*** Boxes with boxes
+    A hbox is formed by using =\hbox{...}=. The size of an hbox can be
+    specified by =\hbox to 5 cm{Contents of the box}= for
+    example. Note that this is easy to get underfull or overfull
+    box. Use =\hfil= to absorb the extra space.
+    
+    Note that there might be spaces in hboxes that is out of your
+    expectation. Unless a line ends in a control word, there is always
+    a space between the last entry in one line and the first one in
+    the next line, so if this is not what you want, use % at the end
+    of that line to comment it out.
+    
+    It's easy to move boxes up, down, left or right on the page by
+    =\raise=, =\lower=, =\moveleft= and =\moveright=. For
+    example =\moveright 1in in \vbox{...}=. Note that the default
+    depth of =\strut= is 3.5pt.
+    
+    It is also possible to fill a box with either an hrule or with
+    dots. The idea is to use =\hrulefill= or =\dotfill= in the hbox.
+
+** Reference
+   - "A Gentle Introduction to TeX"
+* TeXBook
+** Characters
+   Character codes are can be expressed in several formats:
+   decimal,octal, hexadecimal. =\char92=, =\char'134= and =\char"5C=
+   are the same and correspond to the above three format. Note the use
+   of single quote ='= and double quote ="= here.
+** Glue
+   Glue has three attributes: space, the ability to stretch and its
+   ability to shrink. A glue is stretched or shrinked by the
+   percentage of their ability. Check texbook page 70 for details.
+   
+   You should add glues applying the following rules:
+   1. The natural glue space should be the amount of space that looks best.
+   2. The glue stretch shdould be the maximum amount of space that can
+      be added to the natural spacing before the layout begins to look bad.
+   3. The glue shrink should be the maximum amount of space that can
+      be subtracted from the natural spacing before the layout begins
+      to look bad.
+      
+   Vertical glue is created by writing =\vskip<glue>=, where =<glue>=
+   is any glue specification. The usual way to specify =<glue>= to TeX
+   is:
+   #+begin_src tex
+     <dimen> plus <dimen> minus <dimen>
+   #+end_src
+   where =plus<dimen>= and =minus<dimen>= are optional and assumed to
+   be zero if not present. Horizontal glue is created by =\hskip=.
+
+   Infinite glue is specified by =\vfil= and =\vfill= or their
+   horizontal correspondings. Glue with infinite stretch and shrink
+   ability is specifed by =\hss= (horizontal stretch or shrink) or
+   =\vss=. And =\hfilneg= and =\vfilneg= will cancel the
+   stretchability of =\hfil= and =\vfil=.
+   
+   Inifinities are specified by special units =fil=, =fill= and
+   =filll= in the =<dimen>= parts of a stretchability or
+   shrinkability. For example, =\vfil=, =\vfill=, =\vss= and
+   =\vfilneg= are essentially equivalent to:
+   #+begin_src tex
+     \vskip 0pt plus 1fil
+     \vskip 0pt plus 1fill
+     \vskip 0pt plus 1fil minus 1fil
+     \vskip 0pt plus -fil
+   #+end_src 
+
+   =\hbox to <dimen>{contents}= to set the width of hbox, =\hbox
+   spread <dimen>{contents}= create a box whose width is a given
+   amount more than the natural width of its contents.
+   
+** Boxes
+   Summary of specifing boxes:
+   1. A character by itself makes a character box, in horizontal mode;
+      this character is taken from the current font.
+   2. The command =\hrule= and =\vrule= make rule boxes.
+   3. Otherwise you can make hboxes and vboxes, which fall under the
+      generic term =<box>=, A box has one of the following seven forms:
+      #+begin_src tex
+        \hbox<box specification>{<horizontal material>}
+        \vbox<box specification>{<vertical material>}
+        \vtop<box specification>{<vertical material>}
+        \box<register number>
+        \copy<register number>
+        \vsplit<register number> to <dimen>
+        \lastbox
+      #+end_src
+      Here a =<box specification> is either =to<dimen>= or
+      =spread<dimen>= or empty;
+
+   Glue is a special case of leaders. Normally, the space in glue
+   contains nothing, we can specify its filling contents by control
+   word =\leaders=: =\leaders<box or glue>\hskip<glue>=
+
+** How TeX break paragraphs into lines
+   A way to indicate TeX not to break at current point is to insert
+   =~= character. For example: =Chapter~12= will not break between the
+   word =Chapter= and the number =12=, thus assure best looking.
+
+   Another method is using =hbox= because TeX will not break any boxes.
+   
+   However if you want to force break in the middle of a paragraph,
+   just say =\break=. And if you want TeX to fill up the right hand
+   part of a line with blank space just before a forced line break,
+   without indenting the next line, just say =\hfil\break=.
+   
+   Option =\obeylines= is used to keep the original consecutive lines
+   to appear line-to-line in the output. When adding this option,
+   every end-of-line in the input is treated as a =\par= instead of
+   consecutive end-of-line characters.
+   
+   Roughly speaking, TeX breaks paragraphs into lines in the following
+   way: Breakpoints are inserted between words or after hyphens so as
+   to produce lines whose badnesses do not exceed the current
+   =\tolerance=. If there's no way to insert such breakpoints, an
+   overfull box is set. Otherwise the breakpoints are chosen so that
+   the paragraph is mathematically optimal, i.e., best possible, in
+   the sense that it has no more "demerits" than you could obtain by
+   any other sequence of breakpoints. Demerits are based on the
+   badnesses of individual line and on the existence of such things as
+   consecutive lines that end with hyphens or tight lines that occur
+   next to loose ones.
+   
+   A discretionary break consists of three sequence of  characters
+   called _pre-break_, _post-break_ and _no-break_ texts.
+   #+begin_src tex
+     \discretionary{<pre-break text>}{<post-break text>}{<no-break text>}
+   #+end_src
+   If a line break occurs, the pre-break text will appear at the end
+   of the current line and the post-break text will occur at the
+   beginning of next line, but if no break happens, the no-break text
+   will appear in the current line. For example, the propper break of
+   the word "difficult" is provided as:
+   #+begin_src tex
+     di\discretionary{f-}{fi}{ffi}cult
+   #+end_src
+   
+   Each potential breakpoint has an associated "penalty", which
+   represents the "aesthetic cost" of breaking at that place. For
+   example, you say =\penalty 100= at some point in a paragraph, that
+   position will be legitimate place to break between lines, but a
+   penalty 100 will be charged. If you say =\penalty-100=, you are
+   telling that this is a rather good palce to break.   
+   
+   Any penalty that is 10000 or more is considered to be so large that
+   TeX never breaks there. At the other extreme, any penalty that is
+   -10000 or less is considered to be so small that TeX will always
+   break there. The =\nobreak= is simply an abbreviation of =\penalty10000=.
+* TeX by Topci
+** Macro
+   A parameter is called undelimited if it is followed immediately by
+   another parameter in the =<parameter text>= or by the opening brace
+   of the =<replacement text>=, it is called delimited if it is
+   following any other tokens.
+*** Undelimited Parameter
+    When a macro with an undelimited parameter is expanded, TeX scans
+    ahead (without expanding) until a non-blank token is found. If
+    this token is not an explicit =<left brace>=, it is taken to be
+    the argument corresponding to the parameter. Otherwise a
+    =<balanced text>= is absorbed by scanning until the matching
+    explicit =<right brace>= has been found. This balanced text then
+    constitutes the argument.
+    
+    For example: =\def\foo#1#2#3{#1(#2)#3}=, the call to =\foo123=
+    gives =1(2)3=; but =\foo 1 2 3= also gives the same result. This
+    example illustrate the definition of "token" and how TeX skip spaces.
+*** Delimited parameters
+    Character token acting as delimiters in the parameter text have
+    both their character code and category code stored; the delimiters
+    of the actual arguments have to match both.
+    
+    When looking for the argument corresponding to a delimited
+    parameter, TeX absorbs all tokens without expansion(but balancing
+    braces) until the (exact sequence of) delimiting tokens is
+    encountered. The delimeting tokens are not part of the argument;
+    they are removed from the input stream during the macro call.
+
+* Fonts
+  
+** Good fonts
+   We kown that TeX's default roman fonts sucks. So here I'll record
+   some fonts that I encounter is good looking.
+   
+   1. =URWPalladioL=

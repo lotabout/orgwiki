@@ -1,0 +1,13 @@
+#+TITLE: Linux Notes
+
+Notes for Linux generic problems.
+
+* ssh
+** How to kill dead ssh session?
+Normal keys are directly forward through ssh. Instead, use the escape
+sequence(ESCAPE CHARACTERS sectino in =man ssh=).
+
+Key sequence =~.= for disconnect.
+
+*** Reference
+- [[http://askubuntu.com/questions/29942/how-can-i-break-out-of-ssh-when-it-locks][How can I break out of ssh when it locks?]]

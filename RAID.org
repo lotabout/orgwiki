@@ -1,0 +1,92 @@
+#+title: Linux RAID 设置
+
+* RAID是什么
+RAID（Redundant Arrays of Inexpensive Disks），英文翻译为容错式廉价磁
+盘阵列。简单地说，就是通过某种技术，将多个磁盘整合成一个大的磁盘，且这
+个磁盘有容错的能力。那么通过RAID的方式处理之后，不论原先有多少个磁盘，
+在用户的眼里，就变成了一个大的磁盘。
+
+** RAID 的分类
+一般可以简单分成三种，硬RAID，软RAID及假RAID（fakeRAID）。
+
+硬RAID是构买专门的RAID卡，由该卡提供RAID所需要的运算功能。只要预算够，
+这基本上是最好的方案。
+
+软RAID就是通过软件实现RAID功能，这就需要CPU提供额外的计算。这也就是穷
+人的RAID了。
+
+FakeRAID是由主板提供的RAID功能，但RAID需要的计算仍然由CPU实现，所以性
+能上与软RAID无异，它的优点是如果有多个操作系统，使用同一个RAID存储，那
+么fakeRAID就能发挥作用，否则使用软RAID更优。
+
+** RAID 的级别
+常用的有三种：RAID-0, RAID-1, RAID-5
+
+RIAD-0:相当于提供的逻辑卷的功能，将多个硬盘连接在一起，构建成一个大的
+硬盘，性能相当不错，但没有容错的功能。
+
+RAID-1:也叫镜像模式，如果有N个磁盘，则需要另外N个磁盘，存储相同的内容。
+这样如果其中一份数据出错，则可以由另一个磁盘得到。性能比较低。磁盘的利
+用率也比较低。
+
+RAID-5:这是性能与容错的一个均衡，如果有N个磁盘，则需要额外1个磁盘来存
+放冗余信息，如果其中一个磁盘损坏，则可以通过该冗余信息恢复。冗余信息是
+平均存储在N+1个磁盘中而非单独存储在某个磁盘。RAID-5仅支持一个磁盘的损
+坏。
+
+* 软RAID管理
+这里记录一下一些实际操作。 =dmraid= 一般用于管理fakeRAID， =mdadm= 用
+于管理软RAID，是现在推荐使用的工具。
+
+切记，创建和删除的过程中，硬盘的数据会丢失，所以请提前做好备份。
+
+** 删除已有的fakeRAID
+#+begin_src sh
+  dmraid -r               # 查看RAID信息
+  dmsetup remove_all      # 释放对磁盘的使用
+  dmraid -a no            # 停用磁盘阵列
+  dmraid -x               # 清除磁盘上的RAID信息
+#+end_src
+参考[[http://ju.outofmemory.cn/entry/76466][清除RAID磁盘信息]]
+
+** 用mdadm创建软RAID
+
+首先我们需要准备好磁盘或分区（参见本节参考1）
+
+1. 用mdadm创建RAID设备
+   #+begin_src sh
+     mdadm -C /dev/md0 -a yes -l 5 -n 3 -x 0 /dev/sd[bcd] 
+     # -C表示创建（create的意思），-l表示raid级别（level意思） 
+     # -n表示设备的数据（number）  -x 指定初始阵列的富余device 数目
+   #+end_src
+2. 保存mdadm设置
+   #+begin_src sh
+     mdadm --detail --scan >> /etc/mdadm/mdadm.conf
+   #+end_src
+3. 对RAID设备分区格式化
+4. 添加挂载项
+5. 重启看是否自动挂载
+
+如果重启后不自动挂载，可能需要额外的步骤（这里列出两种方法）
+1. 在 =/etc/mdadm/mdadm.conf= 中加入
+   #+begin_example
+     #AUTOSTART:
+     #   should mdadm start arrays listed in /etc/mdadm/mdadm.conf automatically
+     #   during boot?
+     AUTOSTART=true
+   #+end_example
+2. 在正确挂载RAID后（即上述步骤4后）更新initramfs
+   #+begin_src sh
+     update-initramfs -u
+   #+end_src
+
+参考：
+1. [[http://www.linuxidc.com/Linux/2012-06/62354.htm][Linux下用mdadm命令创建软RAID5]]
+2. [[https://raid.wiki.kernel.org/index.php/RAID_setup#Create_RAID_device][Raid Setup]]
+3. [[http://superuser.com/questions/287462/how-can-i-make-mdadm-auto-assemble-raid-after-each-boot][How can I make mdadm auto-assemble RAID after each boot]]
+
+* 参考
+- [[http://vbird.dic.ksu.edu.tw/linux_basic/0420quota.php][鸟哥的Linux私房菜]]
+- [[http://www.zhihu.com/question/19613331][知乎：软RAID与硬RAID各有什
+  么优劣]]
+- [[https://raid.wiki.kernel.org/index.php/RAID_setup][RAID setup]]

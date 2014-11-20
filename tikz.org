@@ -1,0 +1,20 @@
+#+title: Tikz Notes
+
+* Tikz
+** Environment Setup
+   For plain TeX, =\input tikz= is enough to include tikz package
+   #+begin_src tex
+     \input tikz
+     \parindent=0pt
+
+     We are working on
+
+     \tikzpicture
+     \draw (-1.5, 0) -- (1.5, 0);
+     \draw (0, -1.5) -- (0, 1.5);
+     \endtikzpicture
+
+     \tikz \draw (-1.5,0) -- (1.5,0) -- (0,-1.5) -- (0,1.5);
+
+     \bye
+   #+end_src

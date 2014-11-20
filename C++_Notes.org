@@ -591,3 +591,159 @@
          return 0;
      }
    #+end_src
+** Default Constructor
+
+   There are four characteristics of a class under which the compiler
+   needs to sythesize a default constructor for classes that declare
+   no constructor at all. They are called implicit nontrivial default
+   constructors. The synthesized constructor fulfills only
+   implemention need instead of program need. These characteristics are:
+
+   1. Class that has member class object with default constructor.
+   2. Class is derived from base class with default constructor.
+   3. Class has virtual member function.
+   4. Class with a virtual base class.
+      
+   Classes that do not exhibit these characteristics and declares no
+   constructor at all are said to have implicit trivial default
+   constructors. In practice, these tirvial constructors might not be
+   synthesized at all.
+   
+   Note that if you've declared a constructor manually, the system
+   will not generate one default for you any more.
+   
+   So, if you make your constructor private, the derived class will
+   try to generate a constructor that calls the base class's
+   constructor which is private and invalid to call outside the base
+   class. So as to prevent your class from inheriting.
+
+   *references*
+   - "Inside the C++ Object Model" Section 2.1.
+
+** Copy constructor
+   Under three situations will copy constructor be used.
+   1. Assign an object to another.
+   2. Passing an object as the parameter of a function by value.
+   3. Returning an object from a function.
+
+**** Default Memberwise Initialization
+     Each class object initialized with another object of its class
+     is initialized by what is called default memberwise
+     initialization.
+ 
+     If the class do not provide an explicit copy constructor, the new
+     object will be initialized by memberwise copy. That means all
+     members(except member class object) are directly be assigned to
+     the value of the old object(pointer/array, etc). Member class
+     objects are copied recursively using memberwise initialization.
+     
+**** Bitwise Copy Semantics
+     "In practice, a good compiler generate bitwise copies for most
+     class object since they have bitwise copy semantics.
+     
+     When are bitwise copy semantics not exhibited by a class?
+     1. When the class have a member object of a class which a copy
+        constructor exists.(either explictly defined by the class
+        designer or sythesized by the compiler)
+     2. The class is derived from a base class for which a copy
+        constructor exists(again, either defined or sythesized).
+     3. When a class declares one or more virtual function.
+     4. When a class is derived from an inheritance chain in which one
+        or more base classes are virtual(virtual inheritance).
+	
+     Case 1,2 the implementation will need to insert invocations of
+     the member or base class copy constructor inside the synthesized
+     copy constructor.
+     
+**** Resetting the Virtual Table Pointer
+     Normally, if two objects belong to the same class, bitwise copy
+     can be applied, even if they contain virtual functions.
+     #+begin_src cpp
+       class ZooAnimal { 
+       public: 
+          ZooAnimal(); 
+          virtual ~ZooAnimal(); 
+
+          virtual void animate(); 
+          virtual void draw(); 
+          // ... 
+       private: 
+          // data necessary for ZooAnimal's 
+          // version of animate() and draw() 
+       }; 
+
+       class Bear : public ZooAnimal { 
+       public: 
+          Bear(); 
+
+          void animate(); 
+          void draw(); 
+          virtual void dance(); 
+          // ... 
+       private: 
+          // data necessary for Bear's version 
+          // of animate(), draw(), and dance() 
+       }; 
+       Bear yogi;
+       Bear winnie = yogi; // Bitwise copy is sufficiant
+
+       ZooAnimal franny = yogi; // vptr should be re-constructed
+     #+end_src
+     However, =vptr= should be correctly reset when initializing an
+     object using a pointer to a derived class. Because =yogi='s
+     =draw()= function points to =Bear= while =franny= is a
+     =ZooAnimal= and its =show()= should points to class =ZooAnimal=.
+** Member Initialization List
+   You may initialize members using member initialization list or
+   within constructor, execpt four conditions your choice is insignificant.
+   
+   You MUST use member initialization list under the following first 3
+   conditions:
+   1. When initializing a reference member;
+   2. When initializing a const member;
+   3. When invoking a base or member class constructor with a set of arguments.
+   4. Member initialization is faster.
+      
+   Note that the initialization order of member initailization list is
+   the order of member declaration instead of member initialization
+   list order. This may lead to some subtle bug.
+   #+begin_src cpp
+     class A{
+     private:
+         int i;
+         int j;
+     public:
+         A(val): j(val),i(j){} //bug.
+     };
+   #+end_src
+   However, the member initialization list code comes before any user
+   code, thus the following code is correct.
+   #+begin_src cpp
+     class A{
+     private:
+         int i;
+         int j;
+     public:
+         A(val): j(val){
+             i = j;
+         }
+     };
+   #+end_src
+   An advice: put code that initialize a member using another object
+   inside constructor body. This will aovid ambiguous to some extent.
+
+** Data Member Layout
+   1. The Standard requires within an access section (the private,
+      public, or protected section of a class declaration) only that
+      the members be set down such that "later members have higher
+      addresses within a class object"
+   2. The compiler will also synthesize data member to support Object
+      Model. =vptr= is such an example. Traditionally they are placed
+      after all explicitly declared members. Recently they are placed
+      at the beginning of the class object. It is implementation
+      dependent.
+** Vtable Notes
+   - [[http://web.archive.org/web/20120517021435/http://tinydrblog.appspot.com/?p%3D89001][VTable Notes on Multiple Inheritance in GCC C++ Compiler v4.0.1]]
+   - [[http://stackoverflow.com/questions/5712808/understanding-the-vtable-entries][Understanding the vtable entries]]
+   - [[http://mentorembedded.github.io/cxx-abi/cxx-vtable-ex.html][C++ Vtable Example]]
+   - [[http://mentorembedded.github.io/cxx-abi/abi.html][Itanium C++ ABI]]

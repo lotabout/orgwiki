@@ -1,0 +1,35 @@
+#+title: LaTeX 笔记
+
+* FAQs
+** CJK 中文支持
+   一个简单的示例：
+   #+begin_src latex
+     \documentclass{article}
+     \usepackage{CJK}
+     \begin{document}
+     \begin{CJK*}{UTF8}{gbsn}
+       中文测试
+     \end{CJK*}
+     \end{document}
+   #+end_src
+   其中， =CJK*= 代表引用CJK环境， =UTF8= 表示编码， =gbsn= 表示选用的
+   字体。Linux 中安装 texlive 后带的字体有： =gbsn=: 宋体， =gkai= 楷
+   体。繁体字体： =bkai= 繁体楷体， =bsmi= 繁体明体。
+** CJK PDF 书签乱码
+   （CJK哪来这么多问题嘛）
+   首先，由于在Linux下，所以基本不上文档都是使用UTF8而非GBK。而书签支
+   持的宏包hyperref中的选项 =CJKbookmarks= 是为GBK准备的，因此在UTF8编
+   码下，切勿设置该选项。那么下面给个例子：
+   #+begin_src latex
+     \documentclass{article}
+     \usepackage[unicode]{hyperref} % unicode 是必须的
+     \usepackage{CJKutf8} % 不能用{CJK}
+
+     \begin{document}
+     \begin{CJK*}{UTF8}{gbsn}
+     \section{第一节}
+       几个中文测试一下
+     \end{CJK*}
+     \end{document}
+   #+end_src
+   

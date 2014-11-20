@@ -12,8 +12,22 @@ hosted on github pages.
    + [[file:htdp.org][How to Design Programs Notes]]
    + [[file:Thinking_In_Cpp.org][Thinking In C++ Notes]]
    + [[file:Unix_Network_Programming_v2.org][UNIX Network Programming Vol.2 Notes]]
+     
+** Languages
+   + [[file:C%2B%2B_Notes.org][C++ 笔记]]
+   + [[file:python_notes.org][Python 笔记]]
+   + [[file:racket_notes.org][racket 笔记]]
+     
+** System
+   + [[file:slackware_notes.org][Slackware 使用记录]]
+   + [[file:linux_notes.org][Linux 常见问题]]
+** Tools
+   + [[file:emacs_notes.org][Emacs 笔记]]
+   + [[file:tex_notes.org][TeX 笔记]]
 
 ** Misc
    + [[file:how_wiki_is_built.org][本站是如何搭建的]]
    + [[file:test_org.org][Test Org Syntax]]
+   + [[file:interview.org][面试技能]]
+   + [[file:color_schemes.org][常用配色]]
    

@@ -6,3 +6,52 @@
    
    =rfkill block wlan= to block all wlan device.
    =rfkill unblock wlan= to unblock all wlan device.
+** Compiling 32-bit programs
+
+In case you need to compile a 32-bit program (wine and grub are two examples
+of open source programs that are 32-bit only) you first configure your
+shell environment by running the command:
+
+#+begin_src sh
+  . /etc/profile.d/32dev.sh
+#+end_src
+
+Note the 'dot' in front of the filename - that is actually part of the
+commandline!  It will change or create several environment variables so
+that 32-bit versions of binaries are preferred.  Once you are done compiling
+32-bit software, you should logout of your root shell in order to get rid of
+the modified build environment.
+
+In this changed environment, you will be able to use standard SlackBuilds to
+build 32-bit packages for Slackware64.
+There's a couple of things to keep in mind:
+
+1. You have to define the ARCH variable as 'i486' because even on your
+    'x86_64' computer you are compiling a 32-bit program! 
+    This is related to the triplet of '$ARCH-slackware-linux' which 
+    is normally used in the 'configure' command.
+    a. As an exception, you will have to compile the 'wine' package with
+        'ARCH=x86_64' because you will install this package directly on
+        your multilib computer without converting to a 'compat32' package.
+
+2. If you want to install this 32-bit package on Slackware64-multilib,
+    you will have to convert it to a 'compat32' package: 
+
+#+begin_src sh
+      # convertpkg-compat32 -i /path/to/your/fresh/foo-VERSION-i486-BUILD.tgz
+      # upgradepkg --install-new /tmp/foo-compat32-VERSION-x86_64-BUILDcompat32.txz
+#+end_src
+
+** acroread(Adobe Reader)界面方框
+   原因是pango modules没有正确设置和加载，用下列命令生成：
+   #+begin_src sh
+     pango-querymodules-32 > '/etc/pango/i486-slackware-linux/pango.modules'
+   #+end_src
+   - [[http://drunkedcat.diandian.com/post/2012-04-26/40047144778][amd64 gentoo acroread 字体方框问题]]
+   - 
+** wine 三国志11出错
+   错误：fixme:service:scmdatabase_autostart_services Auto-start service L"SecDrv" failed to start: 2
+
+   这个问题要把游戏目录的SECDRV.SYS
+   复制到windows/system32/drivers里面就行了。
+

@@ -1,0 +1,57 @@
+#+title: Awk 笔记
+
+* FAQs
+** awk specify FS(field seperator)
+   awk's internal variable =FS= defines awk's seperator, and it is
+   actually a regular expression. Thus, for the following sample:
+   #+begin_example
+     filenameA,filenameB 0
+   #+end_example
+   We specify different =FS=:
+   #+begin_src sh :export both :results output
+     awk 'BEGIN{FS = ","}{print "0="$0;print "1="$1;print "2="$2; print "3="$3}' << EOF
+     filenameA,filenameB 0
+     EOF
+   #+end_src
+
+   #+RESULTS:
+   : 0=filenameA,filenameB 0
+   : 1=filenameA
+   : 2=filenameB 0
+   : 3=
+
+   Now, use regular expression to specify both "," and "<space>" as seperator.
+   #+begin_src sh :export both :results output
+     awk 'BEGIN{FS = "[, ]"}{print "0="$0;print "1="$1;print "2="$2; print "3="$3}' << EOF
+     filenameA,filenameB 0
+     EOF
+   #+end_src
+
+   #+RESULTS:
+   : 0=filenameA,filenameB 0
+   : 1=filenameA
+   : 2=filenameB
+   : 3=0
+
+   However, if =filenameB= and =0= are seperated by more than one
+   space, we will get more than three fields, and as we may expected,
+   we'll have to expand the =FS= even more:
+   #+begin_src sh :export both :results output
+     awk 'BEGIN{FS = "[, ]+"}{print "0="$0;print "1="$1;print "2="$2; print "3="$3}' << EOF
+     filenameA, filenameB     0
+     EOF
+   #+end_src
+
+   #+RESULTS:
+   : 0=filenameA, filenameB     0
+   : 1=filenameA
+   : 2=filenameB
+   : 3=0
+
+   Note that, the =FS= variable can also be specified by command line
+   options:
+   #+begin_src sh
+     awk -F "[, ]+" '{print "0="$0;print "1="$1;print "2="$2; print "3="$3}' << EOF
+     filenameA, filenameB     0
+     EOF
+   #+end_src
