@@ -11,3 +11,10 @@ Key sequence =~.= for disconnect.
 
 *** Reference
 - [[http://askubuntu.com/questions/29942/how-can-i-break-out-of-ssh-when-it-locks][How can I break out of ssh when it locks?]]
+- 
+
+* at
+** Show the contents of a task
+#+begin_src sh
+  at -c <job>
+#+end_src

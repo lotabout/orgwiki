@@ -41,3 +41,24 @@
 1. Insert =C-q= First.
 2. =C-x 8 <RET> <unicode>= to insert unicode characters.
 
+** How to swap values by regexp-replace
+The idea is mixing elisp expressions in regular expressions.
+
+For example, we want to swap all ocurrences of word =left= and
+=right=, the we can specify the pattern to be:
+#+begin_example
+  Replace: \(left\)\|right
+#+end_example
+And the next step is to correctly specify the replace string, note
+that by the previous pattern, we can capture the matches of =left= by
+=\1= as we shall see later. Now replace with:
+#+begin_example
+  Replace with: \,(if \1 "right" "left")
+#+end_example
+We use =\,= to insert elisp expression. For more information, check [fn:elfre]
+
+[fn:elfre] [[http://www.masteringemacs.org/article/evaluating-lisp-forms-regular-expressions][Evaluating Lisp Forms in Regular Expressions]]
+
+
+
+

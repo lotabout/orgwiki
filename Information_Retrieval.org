@@ -1,0 +1,14 @@
+#+title: 信息检索
+
+信息检索的任务本质上，是对于一个查询Q，对所有数据库里的文档，返回这些
+文档的一个排序R。
+
+* 常用度量
+这些度量用于评价检索算法的正确性，有效性
+
+** Recall/Precision
+** AVP
+** DCG
+
+* 参考
+- [[http://en.wikipedia.org/wiki/Information_retrieval][Information Retrieval(wikipedia)]]

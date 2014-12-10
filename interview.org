@@ -117,7 +117,7 @@
 ** 装饰器 Decorator
    python 中的decorator本质上就是包装函数 =wrap= ，以被包装函数 =fn=
    为参数，返回一个包装后的函数并赋给 =fn= 。
-   
+
    例[fn:1]：
    #+begin_src python :results output
      def hello(fn):

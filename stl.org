@@ -1,0 +1,531 @@
+#+title: STL 简明教程
+
+Standard Template Library(STL)中文译为标准模板库。当我们从标准C的语法
+进阶到C++，开始接触STL之后，很容易就被这复杂的库弄得晕头转向，无所适从。
+那么本文就从较为实用的角度，带大家理解什么是STL，如何使用STL。
+
+注：本文为作者的观点，更严谨的内容请查阅相关文献。
+
+* 什么是STL
+如果将C++的提供的语法比喻作铁，那么STL的出现就可以比喻作蒸汽机，它建立
+在C++的语法之上，但它的出现极大扩展了C++的能力，让人们见识到了C++能达
+到的外延。
+
+** STL的一点点历史
+实际上，STL的出现与C++的模板支持是相对独立的[fn:1]，它最初的目的是[[泛型程序
+设计][http://zh.wikipedia.org/wiki/%E6%B3%9B%E5%9E%8B]]
+([[http://en.wikipedia.org/wiki/Generic_programming][Generic
+Programming]]). 简单地说，是希望做一个抽象，对程序设计中用到的数据结构
+以及算法。例如，排序就是一个抽象，给定一系列元素，只要元素是可比较的，
+我们就能对它们进行排序，而元素的类型是什么并不重要。
+
+这样的抽象过程在动态类型语言（如scheme）是很自然的，容易实现的，但对强
+类型的语言（如C++、java）等是十分困难的[fn:2]。之后C++中添加了模板的机
+制，使得STL的实现成为可能。
+
+虽然它是使用模板实现的，使用时却不需要太多关于模板的知识。但在学习时要
+注意两点：
+1. STL是对程序的抽象，因此一个STL类的存在，肯定是对某种结构或操作的抽
+   象。
+2. 因为STL是抽象，所以使用时我们需要实际指定元素的类型，这在下节的例子
+   中可以体现。
+
+** STL的简单例子
+理解一个抽象概念最简便的方法就是看一个例子，这节中我们给出STL的简单例
+子，分别对应结构抽象和操作抽象。
+
+*** vector
+vector(中译向量)抽象的是一个序列容器，代表的是可以改变大小的数组[fn:3]。
+也就是说，vector可以认为是对数组这种序列结构的一个抽象，并且还包含了大
+小可变这个性质。当然，它同时也抽象了对序列的一些操作，如 =push_back=
+代表在序列末尾添加一个新的元素。
+
+下面看一个简单的例子：
+#+begin_src cpp :export both :results output
+  #include <iostream>
+  #include <vector>
+  #include <cstdlib> // for rand
+
+  using namespace std;
+
+  int main(int argc, char *argv[])
+  {
+      srand(time(NULL));
+      vector<int> vec;  // (ref:vec:def)
+      int i;
+      for (i = 0; i < 10; i++) {
+          vec.push_back(rand()%1000); // generate a random number (ref:vec:push)
+      }
+
+      cout << "vec: ";
+      for (i = 0; i < 10; i++) {
+          cout << vec[i] << " "; // (ref:vec:access)
+      }
+      cout << endl;
+
+      int sum = 0;
+      for (i = 0; i < 10; i++) {
+          sum += vec[i];
+      }
+
+      cout << "sum = " << sum << endl;
+
+      return 0;
+  }
+#+end_src
+
+#+RESULTS:
+: vec: 552 928 688 317 784 54 87 827 220 745
+: sum = 5202
+
+上面的例子中，第[[(vec:def)]]定义了一个vector，注意上一节中说过，STL是
+抽象，所以这里需要指定具体元素的类型，这个例子中就是 =int= 。这里的
+=vector<int>= 语法就是C++模板的实例化。
+
+然后是本节开始时提到的，vector同时抽象了对序列的操作，在第
+[[(vec:push)]]行中就使用 =push_back= 在序列末尾添加元素。
+
+最后演示的是获取vector中的元素，第[[(vec:access)]]行使用的是类似数组的
+访问方式，目的是给大家一个直观的感觉，即vector是对数组的一个抽象。
+
+注意上面的例子很简单，并且只是演示使用，实际使用STL并不推荐诸如
+=vec[i]= 这样的用法，在这里不作深入，随着对STL的理解加深，读者自然会明
+白用什么方式更合适。
+
+*** sort
+下面我们用经典的排序演示STL对一些通用操作的抽象，这里演示的就是排序。
+首先看例子（来自
+[[http://www.cplusplus.com/reference/algorithm/sort/?kw%3Dsort][cplusplus]]
+）：
+#+begin_src cpp
+  #include <iostream>     // std::cout
+  #include <algorithm>    // std::sort
+  #include <vector>       // std::vector
+
+  bool myfunction (int i,int j) { return (i<j); }
+
+  struct myclass {
+    bool operator() (int i,int j) { return (i<j);}
+  } myobject;
+
+  int main () {
+    int myints[] = {32,71,12,45,26,80,53,33};
+    std::vector<int> myvector (myints, myints+8);               // 32 71 12 45 26 80 53 33
+
+    // using default comparison (operator <):
+    std::sort (myvector.begin(), myvector.begin()+4);           //(12 32 45 71)26 80 53 33
+
+    // using function as comp
+    std::sort (myvector.begin()+4, myvector.end(), myfunction); // 12 32 45 71(26 33 53 80) (ref:sort:func)
+
+    // using object as comp
+    std::sort (myvector.begin(), myvector.end(), myobject);     //(12 26 32 33 45 53 71 80)
+
+    // print out content:
+    std::cout << "myvector contains:";
+    for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it)
+      std::cout << ' ' << *it;
+    std::cout << '\n';
+
+    return 0;
+  }
+#+end_src
+
+从这个例子中，我们可以看到，与 =vector= 不同，就形式而方， =sort= 就只
+是一个函数。在这个例子中，你可能看不明白这些参数，严格来说， =sort= 至
+少需要两个参数，用来代表一个序列的起始和终止，即 =sort(start, end)= ，
+而例子中的用法叫作 =iterator= ，我们会在下节中讲解。
+
+这个例子中我们要学习到的是，首先是一个事实，即STL也对“操作”进行了抽
+象。其次，与 =vector<int>= 这样的指定方式不同，我们在使用中并没有指定
+=sort= 需要的类型。这是因为 =sort= 操作对类型并不关心，只要它操作的元
+素支持“比较”运算即，所以像在第[[(sort:func)]]行中，我们还可以指定元
+素比较的方式。
+
+* iterator
+
+那么，即使看完了上面的例子，我们对STL还是一无所知，看着代码里那些高大
+上的调用方式，自己写代码时却依旧无从写起。那么这又是为什么呢？
+
+实际上呢，STL抽象了4个部分：算法，容器，函数及迭代器（Algorithms,
+containers, functional, and iterators [[fn:1]]）。那么除了函数这部分
+（笔者也不熟）之外，算法和容器很大程度上是建立在迭代器之上的，所以在使
+用过程中总会涉及到迭代器的内容。所以理解它也十分关键。
+
+如果你懂英文的话，[ [[fn:4]] ]是个很好的教程，下文的内容从中借鉴部分内
+容。
+
+** iterator 是什么
+那么什么是迭代器（iterator）？在回答这个问题之前，先回想一下STL的目的，
+那就是抽象，那么迭代器要抽象的，就是容器的遍历，或者说容器的访问。
+
+[[cplusplus.com][http://www.cplusplus.com/reference/iterator/]] 中的描
+述是：迭代器可以是任意的对象，该对象指向一系列元素（某个范围内的元素）
+中的一个，并在一系列操作之下（至少在增加(++)及解引用(*)这两个操作下能
+完成），能访问完所以这个系列（或说范围）的元素。
+
+所以，所谓的迭代，指的其实就是“一次一个”这样的概念
+
+再简单解释一下容器的概念：容器，就是一个结构，它能容纳一些元素。所以C
+中的数组，python中的集合，还有像映射（map），哈希表（hash table）等等
+都可以称为容器。
+
+在实际的程序设计中，我们几乎总是需要使用到容器（如数组），而几乎所有我
+们使用的容器，都在遍历所有元素的需求，如遍历数组或链表的所有元素。那么
+我们很自然地就将这个遍历的操作进行抽象，称之为迭代器。
+
+例如，我们需要在数组或链表中寻找一个元素，下面是一个例子：
+#+begin_src cpp
+  int *find_in_array(int A[], int *end, int target)
+  {
+      int *p;
+      for (p = A; p != end; p ++) {
+          if (*p == target) {
+              return p;
+          }
+      }
+      return p; // return *end* if not found
+  }
+
+  node *find_in_list(node *start, node *end, int target)
+  {
+      node *p;
+      for (p = start; p != end; p = p->next) {
+          if (p->data == target) {
+              return p;
+          }
+      }
+      return p; // return *end if not found
+  }
+#+end_src
+从这个伪代码中可以看到，它们操作惊人地相似，所以，我们希望能有这样的函
+数：
+#+begin_src cpp
+  Type find(Type start, Type end, const AnotherType target)
+  {
+      Type tmp;
+      for (tmp = start; tmp != end; tmp++) {
+          if (*tmp == target) {
+              return tmp;
+          }
+      }
+      return tmp;
+  }
+#+end_src
+即，如果类型 =Type= 支持通过 =tmp++= 来得到序列中的下一个元素，还支持
+通过 =*tmp= 来得到容器中的元素内容，那么无论是什么样的容器，我们都能直
+接使用该 =find= 函数来在容器中查找元素。
+
+可以看到，对容器的遍历操作进行抽象，目的是能更好地抽象容器的其它操作，
+如这里的“查找”操作也因此STL抽象了 iterator，同时也的确抽象了我们描述
+的“查找”操作[[http://www.cplusplus.com/reference/algorithm/find/?kw%3Dfind][find]].
+
+** iterator 如何使用
+现在我们知道了 iterator 的成因，那么如何在代码中使用 iterator 呢？那么
+下面分三部分进行介绍，第一部分用于我们自己遍历容器，第二部分是调用STL中
+的算法，第三部分是自己构建iterator用于STL的算法中。
+
+*** 简单的遍历
+首先我们需要知道的是STL中的所有容器都包含了iterator对象，通过如下方式
+获得iterator的某个类型的实例。这里说得比较绕，是因为正像上节中说的，
+iterator需要有 =*tmp= 这样的操作，但是容器元素的类型是多种多样的，所以
+也需要有对应的iterator类型，执行如 =*tmp= 操作时才能返回正确类型。
+
+#+begin_src cpp
+  vector<int>::iterator vit;
+  set<int>::iterator sit;
+  vector<int>::const_iterator cvit;
+  set<int>::const_iterator csit;
+#+end_src
+
+有了iterator之后，就可以通过 =++= 操作和 =*= 操作对容器进行遍历了。
+#+begin_src cpp :results output :export both
+  #include <iostream>
+  #include <vector>
+  #include <set>
+
+  using namespace std;
+
+  int main(int argc, char *argv[])
+  {
+      int array[] = {1,1,1,2,3,4,5,6};
+      int len = sizeof(array)/sizeof(array[0]);
+
+      vector<int> myvec(array, array+len);
+      set<int> myset(array, array+len);
+
+      // get the corresponding iterator
+      vector<int>::iterator vit;
+      set<int>::iterator sit;
+
+      cout << "The elements of vector are:" << endl;
+      for (vit = myvec.begin(); vit != myvec.end(); vit++) {
+          cout << *vit << " ";
+      }
+      cout << endl;
+
+      cout << "The elements of set are:" << endl;
+      for (sit = myset.begin(); sit != myset.end(); sit++) {
+          cout << *sit << " ";
+      }
+      cout << endl;
+
+      return 0;
+  }
+#+end_src
+
+#+RESULTS:
+: The elements of vector are:
+: 1 1 1 2 3 4 5 6
+: The elements of set are:
+: 1 2 3 4 5 6
+
+上面的例子本身并没有什么意义，只是演示iterator的使用。在例子中，我们从
+容器中得到了它们的iterator: =myvector.begin()=, =myvector.end()=,
+=myset.begin()=, 及 =myset.end()= 。容器支持的iterator可以参考
+[[http://www.cplusplus.com/reference/stl/][Containers]].
+
+注意，除了iterator，还有另一种迭代器，称为 =const_iterator= ，它们的存
+在相当于 =int= 和 =const int= 的区别，用在不允许修改容器内容的情形下。
+
+*** 使用algorithm中的算法
+在介绍 iterator 时，我们也同时介绍了 algorithm 的形成，即如果数据结构
+能够被很好地抽象，那么它们的共同操作也就可以抽象成算法。那么这节中，我
+们就举一些简单的例子，介绍STL中如何使用 algorithm 及 iterator.
+
+这里我们使用
+[[http://www.cplusplus.com/reference/algorithm/set_union/][cplusplus.com]]
+中的例子，介绍的算法是 =set_union= ，作用是将两个排好序的容器进行集合
+的“并”操，我们稍微对例子进行了修改。
+
+首先查看 =set_union= 的API：
+#+begin_src cpp
+  template <class InputIterator1, class InputIterator2, class OutputIterator>
+    OutputIterator set_union (InputIterator1 first1, InputIterator1 last1,
+                              InputIterator2 first2, InputIterator2 last2,
+                              OutputIterator result);
+#+end_src
+从中可以看到，我们需要的是两个序列，分别为： =[first1, last1)= 和
+=[first2, last)= 。注意由iterator指定的范围中，并不包含 =last1= 指向的
+元素。同时需要另一个参数 =result= ，用以标示结果存储的起始位置。返回的
+参数指向 =result= 结束的位置。
+
+#+begin_src cpp :results output :export both
+  // set_union example
+  #include <iostream>     // std::cout
+  #include <algorithm>    // std::set_union, std::sort
+  #include <vector>       // std::vector
+
+  int main () {
+      int array1[] = {5,10,15,20,25};
+      int array2[] = {50,40,30,20,10};
+      std::vector<int> first(array1, array1+5);
+      std::vector<int> second(array2, array2+5);
+      std::vector<int> v(10);                      // 0  0  0  0  0  0  0  0  0  0
+      std::vector<int>::iterator it;
+
+      std::sort (first.begin(),first.begin()+5);     //  5 10 15 20 25
+      std::sort (second.begin(),second.begin()+5);   // 10 20 30 40 50
+
+      it=std::set_union (first.begin(), first.begin()+5,
+                         second.begin(), second.begin()+5,
+                         v.begin()); // (ref:union)
+      // 5 10 15 20 25 30 40 50  0  0
+      v.resize(it-v.begin());        // 5 10 15 20 25 30 40 50 (ref:union:minus)
+
+      std::cout << "The union has " << (v.size()) << " elements:\n";
+      for (it=v.begin(); it!=v.end(); ++it)
+          std::cout << ' ' << *it;
+      std::cout << '\n';
+
+      return 0;
+  }
+#+end_src
+
+#+RESULTS:
+: The union has 8 elements:
+:  5 10 15 20 25 30 40 50
+
+这个例子里演示了如何为容器构建iterator，作为algorithm的参数。例子中直
+接使用 =first.begin()+5= 这样的方式[[(union)]]，这是有条件的，需要随机访问类型的
+iterator，在如 =list= 这样的容器就不能使用，因此，iterator提供了更高层
+的一个操作： =advance= 我们在下面会进行介绍。同理，第[[(union:minus)]]
+行用以计算两个iterator范围内的元素个数，也有对应的操作： =distance= 。
+
+*** 数组作为iterator使用
+为了让大家更好地理解什么是iterator，我们使用数组作为algorithm的参数，
+用以演示iterator的实际作用。
+
+正如本节的开头所说，iterator代表的是一个范围，通过两个操作： =++= 和
+=*= 就能够遍历和访问该范围内的元素。根据这个定义，我们很自然地想到了 
+*指针* ，如果指针指向数组，它就同时满足上述的三个性质。那么，这个例子
+来自
+[[http://www.cplusplus.com/reference/algorithm/set_union/][cplusplus]]，
+是上小节例子的原版：
+
+#+begin_src cpp
+  // set_union example
+  #include <iostream>     // std::cout
+  #include <algorithm>    // std::set_union, std::sort
+  #include <vector>       // std::vector
+
+  int main () {
+    int first[] = {5,10,15,20,25};
+    int second[] = {50,40,30,20,10};
+    std::vector<int> v(10);                      // 0  0  0  0  0  0  0  0  0  0
+    std::vector<int>::iterator it;
+
+    std::sort (first,first+5);     //  5 10 15 20 25 (ref:union:sort)
+    std::sort (second,second+5);   // 10 20 30 40 50
+
+    it=std::set_union (first, first+5, second, second+5, v.begin()); // (ref:union:array)
+                                                 // 5 10 15 20 25 30 40 50  0  0
+    v.resize(it-v.begin());                      // 5 10 15 20 25 30 40 50
+
+    std::cout << "The union has " << (v.size()) << " elements:\n";
+    for (it=v.begin(); it!=v.end(); ++it)
+      std::cout << ' ' << *it;
+    std::cout << '\n';
+
+    return 0;
+  }
+#+end_src
+那么上面例子中，第[[(union:sort)]]行中，我们直接使用了数组的地址
+=first= 作为起始的iterator，而 =first+5= 作为自己计算得到的结束iterator。
+
+通过这个例子，希望大家对iterator的本质能有更好的理解，它只是对“遍历”
+的一个抽象，任何对象，如果它支持这样的操作，就可以使用iterator进行抽象，
+就可以利用支持iterator的算法进行通用的操作。
+
+** iterator 种类
+
+关于iterator的分类，可以参考
+[[http://www.cplusplus.com/reference/iterator/][cplusplus: iterator]]。
+这里只简要介绍：随机访问型iterator和非随机访问型。
+
+上面介绍iterator中，我们说只需要支持 =++= 和 =*= 操作。但这仅仅是一个
+很简单的抽象，由于实际中有一些容器它们支持更方便的一些操作，所以
+iterator也进行了相应的抽象，但并不是所有容器都支持。
+
+所谓的随机访问，以数组为例，我们能以常数时间 =O(1)= 访问其中任意一个元
+素，这就是随机访问。而像最简单的链表结构，要访问第k个元素，就必须访问
+前k-1个元素才能得到，这就是非随机访问。
+
+上节例子中，我们使用 =first+5= 这样的表达式来计算得到数组的末尾元素，
+我们能这么做，完全是因为数组支持随机访问。
+
+那么这里介绍它们的目的，是因为algorithm中的许多操作，只对随机访问类型
+有效，如[[http://www.cplusplus.com/reference/algorithm/sort/][sort]]，
+它的原形如下：
+#+begin_src cpp
+  template <class RandomAccessIterator>
+    void sort (RandomAccessIterator first, RandomAccessIterator last);
+#+end_src
+可见，它能够对随机访问类型的iterator进行操作，如vector，但对非随机访问
+类型则不起作用，如list。要注意的是，STL有许多容器属于 *非* 随机访问型，
+如[[http://www.cplusplus.com/reference/list/list/][list]],
+[[http://www.cplusplus.com/reference/set/set/][set]],
+[[http://www.cplusplus.com/reference/map/map/][map]] 等。
+
+** iterator 的其它操作
+前面介绍了随机访问型的iterator，于是，如果我们有了初始iterator：
+=begin= ，它之后的第n个元素就可以通过 =begin+n= 得到。相反，如果得到末
+尾元素 =end= ，它与起始元素间的距离（即元素个数）就可以通过
+=end-begin= 得到。这个用法在之前的例子中也见到了。
+
+那么对于非随机访问类型的iterator，我们却无法进行同样的操作。为了达到统
+一，iterator类对这两个操作进行了抽象，提供两个成员函数：
+[[http://www.cplusplus.com/reference/iterator/advance/][advance]] 和
+[[www.cplusplus.com/reference/iterator/distance/][distance]]。原型如下：
+
+#+begin_src cpp
+  template <class InputIterator, class Distance>
+    void advance (InputIterator& it, Distance n);
+
+  template<class InputIterator>
+    typename iterator_traits<InputIterator>::difference_type
+      distance (InputIterator first, InputIterator last);
+#+end_src
+
+注意，在实现上，容器需要继承iterator并提供具体函数的实现。下面我们将上
+面的一个例子用这节介绍的函数进行修改：
+
+#+begin_src cpp :results output :export both
+  // set_union example
+  #include <iostream>     // std::cout
+  #include <algorithm>    // std::set_union, std::sort
+  #include <vector>       // std::vector
+
+  int main () {
+      int array1[] = {5,10,15,20,25};
+      int array2[] = {50,40,30,20,10};
+      std::vector<int> first(array1, array1+5);
+      std::vector<int> second(array2, array2+5);
+      std::vector<int> v(10);                      // 0  0  0  0  0  0  0  0  0  0
+      std::vector<int>::iterator it;
+      std::vector<int>::iterator fend = first.begin();
+      std::vector<int>::iterator send = second.begin();
+
+      advance(fend, 5);
+      std::sort (first.begin(),fend);     //  5 10 15 20 25
+      advance(send, 5);
+      std::sort (second.begin(),send);   // 10 20 30 40 50
+
+      it=std::set_union (first.begin(), fend, second.begin(), send, v.begin());
+                                         // 5 10 15 20 25 30 40 50  0  0
+      v.resize(distance(v.begin(), it)); // 5 10 15 20 25 30 40 50
+
+      std::cout << "The union has " << (v.size()) << " elements:\n";
+      for (it=v.begin(); it!=v.end(); ++it)
+          std::cout << ' ' << *it;
+      std::cout << '\n';
+
+      return 0;
+  }
+#+end_src
+
+
+* 总结
+本文主要介绍了STL的基本概念，并较为详细地介绍了STL中的iterator的概念和
+使用。同时也简单介绍了如何构造iterator作为algorithm的参数。
+
+这些都是偏向实用主义的内容，但最为重要的是，要学习STL提供的泛型编程的
+能力，对程序设计中常见的内容进行抽象。下面我们会再讨论其它语言中进行的
+一些抽象。
+
+理论上，有了STL，我们应该只使用STL提供的抽象函数进行编程，这样移植性好，
+抽象的能力也好，但实际上，由于效率等等问题，我们还是需要混合基础的语法
+与STL，至于做到什么程度，这就靠程序员的把握了。
+
+另外，STL还有许多高级的内容，如Functional就是能常用函数的一个抽象，读
+者可自选学习。
+
+** 与其它语言的比较
+
+这里要对比的是python的iterator支持（参见
+[[https://docs.python.org/2/library/stdtypes.html#iterator-types][iterator-types]]
+）。与STL不同，python选择将iterator封装在容器中（这点其实与STL相同），
+但它不直接提供iterator类型，而是用内置的 =for x in container:= 的语法
+来支持iterator的遍历，相当于下列c++代码：
+#+begin_src cpp
+  iterator_type it;
+  for (it = container.begin(); it != container.end(); it++) {
+      // do something
+  }
+#+end_src
+
+那么这里举这个例子是希望读者思考三个问题：
+1. 将iterator暴露给用户，对用户而言是好是坏？
+2. 语言内置语法支持与用户掌握细节，熟优熟劣？
+3. 动态类型与静态语言各自的优缺点？
+
+如果你懂scheme语言（这里用的是racket），可以参考[[racket中iterator的实现][http://docs.racket-lang.org/reference/for.html]]，
+再做一些对比。
+
+* Footnotes
+
+[fn:1] [[http://en.wikipedia.org/wiki/Standard_Template_Library][wikipedia: Standard Template Library]]
+[fn:2] [[http://zh.wikipedia.org/wiki/%25E6%25A0%2587%25E5%2587%2586%25E6%25A8%25A1%25E6%259D%25BF%25E5%25BA%2593][wikipedia: 标准模板库]]
+[fn:3] [[http://www.cplusplus.com/reference/vector/vector/?kw%3Dvector][cplusplus: vector]]
+[fn:4] [[http://www.mochima.com/tutorials/STL.html][tutorial:STL:containers and iterators]]
+[fn:5] [[http://www.mochima.com/tutorials/STL_algorithms.html][tutorial: STL: Algorithms and Function Objects]]
