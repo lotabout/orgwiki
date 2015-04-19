@@ -1,0 +1,16 @@
+#+title: Git 笔记
+
+* Tasks
+** Change commit message of past git commits.
+To change the most recent commit message, use =git commit
+--amend=. Change message of (unpushed) commits further in the past,
+
+#+begin_src bash
+ git rebase -i [COMMIT BEFORE THE FIRST YOU WANT TO EDIT]
+#+end_src
+
+Mark all messages to be changed with "edit". Git will start the
+rebasing and stop at every marked commit. For each of those, do a =git
+commit –amend -m 'new messag'= and =git rebase --continue=
+
+- [[http://makandracards.com/makandra/868-change-commit-messages-of-past-git-commits][Change commit message of past git commits]]

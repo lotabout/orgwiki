@@ -18,3 +18,13 @@ can simply type:
   :S/{tmp_1,tmp_2}/{tmp_2,tmp_1}/g
 #+end_example
 Note the upper case =S=.
+
+** How to substitute only for lines that matching a pattern
+Use the 'g' command:
+#+begin_example
+  :g/pat/s/src/target/
+#+end_example
+If a range is specified, the syntax is similar:
+#+begin_example
+  :'<,'>g/pat/s/src/target/
+#+end_example

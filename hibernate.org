@@ -1,0 +1,92 @@
+#+title: Hibernate Notes
+
+* Hibernate Tools with maven
+The key here is a plugin named
+[[http://mojo.codehaus.org/hibernate3-maven-plugin/][hibernate3-maven-plugin]]. We
+can run hibernate tools in maven with its help.
+
+The current version is 3.0. and the conguration is changed to direct usage of
+the ant hibernate tool plugin according to
+[[http://stackoverflow.com/questions/9276808/unable-to-generate-hbm2ddl-using-hibernate3-maven-plugin-3-0/9331423#9331423][Stackoverflow]].
+And its reference can be found in [[http://docs.jboss.org/tools/3.3.0.Final/en/hibernatetools/html_single/index.html#ant]].
+
+Sample configuration of Version *2.2*:
+
+#+begin_src xml
+  <plugin>
+    <groupId>org.codehaus.mojo</groupId>
+    <artifactId>hibernate3-maven-plugin</artifactId>
+    <version>2.2</version>
+    <configuration>
+      <components>
+        <component>
+          <name>hbm2java</name>
+          <implementation>jdbcconfiguration</implementation>
+          <outputDirectory>src/main/java/com/mkyong/dto</outputDirectory>
+        </component>
+      </components>
+      <componentProperties>
+        <revengfile>src/main/resources/reveng.xml</revengfile>
+        <propertyfile>src/main/resources/hibernate.properties</propertyfile>
+        <packagename>com.mkyong.dto</packagename>
+        <jdk5>true</jdk5>
+        <ejb3>true</ejb3>
+      </componentProperties>
+    </configuration>
+    <dependencies>
+      <dependency>
+        <groupId>cglib</groupId>
+        <artifactId>cglib-nodep</artifactId>
+        <version>2.2.2</version>
+      </dependency>
+      <dependency>
+        <groupId>mysql</groupId>
+        <artifactId>mysql-connector-java</artifactId>
+        <version>5.1.9</version>
+      </dependency>
+    </dependencies>
+  </plugin>
+#+end_src
+
+Sample configuration of Version *3.0*:
+#+begin_src xml
+  <plugin>
+    <groupId>org.codehaus.mojo</groupId>
+    <artifactId>hibernate3-maven-plugin</artifactId>
+    <version>3.0</version>
+    <configuration>
+      <hibernatetool
+          destdir="${project.build.sourceDirectory}">
+        <classpath>
+          <path location="${project.build.sourceDirectory}/classes"/>
+        </classpath>
+        <jdbcconfiguration
+            packagename="com.mkyong.dto"
+            revengfile="src/main/resources/reveng.xml" />
+        <hbm2java jdk5="true" ejb3="true"/>
+      </hibernatetool>
+    </configuration>
+    <dependencies>
+      <dependency>
+        <groupId>org.hibernate</groupId>
+        <artifactId>hibernate-core</artifactId>
+        <version>3.3.2.GA</version>
+      </dependency>
+      <dependency>
+        <groupId>cglib</groupId>
+        <artifactId>cglib-nodep</artifactId>
+        <version>2.2.2</version>
+      </dependency>
+      <dependency>
+        <groupId>mysql</groupId>
+        <artifactId>mysql-connector-java</artifactId>
+        <version>5.1.9</version>
+      </dependency>
+    </dependencies>
+  </plugin>
+#+end_src
+
+Note that hibernate-tools may have conflictions with hibernate 3.5+. The
+=3.3.2.GA= version used here is the known version that works. The generated
+resource can be used with higer version. So we only need =3.3.2.GA= to reverse
+engineering

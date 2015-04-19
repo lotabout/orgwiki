@@ -17,6 +17,7 @@ hosted on github pages.
    + [[file:C%2B%2B_Notes.org][C++ 笔记]]
    + [[file:python_notes.org][Python 笔记]]
    + [[file:racket_notes.org][racket 笔记]]
+   + [[file:java.org][Java 笔记]]
      
 ** System
    + [[file:slackware_notes.org][Slackware 使用记录]]

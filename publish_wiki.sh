@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "Using emacs to publish all org projects..."
-emacs --batch -l ~/.emacs -f org-publish-all
+emacs -nw --eval "(progn (org-publish-all) (kill-emacs))"
 
 cur_DATETIME=$(date +"%Y/%m/%d-%H:%M")
 

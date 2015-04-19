@@ -1,0 +1,15 @@
+#+title: Compiler Design in C
+
+* Input and Lexical Analysis
+** Input Systems
+*** An Exmpale Input System
+The criterions should be met are:
+- The routines should be as fast as possible, with little or no
+  copying of the input strings.
+- Several characters of pushback and lookahead must be available.
+- Lexemes of a reasonable length must be supported.
+- Both the current and previous lexeme must be availabe.
+- Disk access should be efficient.
+
+
+

@@ -1,0 +1,25 @@
+#+title: Make FAQ
+
+* Make FAQs
+
+** how to write makefile rules to support debug/release builds
+
+#+begin_src makefile
+  $(CXX) = g++ -g3 -gdwarf2
+  $(CC) = gcc -g3 -gdwarf2
+
+  all: executable
+
+  debug: CXX += -DDEBUG -g
+  debug: CC += -DDEBUG -g
+  debug: executable
+
+  executable: CommandParser.tab.o CommandParser.yy.o Command.o
+      $(CXX) -o output CommandParser.yy.o CommandParser.tab.o Command.o -lfl
+
+  CommandParser.yy.o: CommandParser.l 
+      flex -o CommandParser.yy.c CommandParser.l
+      $(CC) -c CommandParser.yy.c
+#+end_src
+
+- [[http://stackoverflow.com/questions/1079832/how-can-i-configure-my-makefile-for-debug-and-release-builds][How can I configure my makefile for debug and release builds?]]

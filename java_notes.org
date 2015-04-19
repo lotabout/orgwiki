@@ -1,0 +1,241 @@
+#+title: JAVA Notes
+
+* Variables
+"variable" vs "field". Fields are like the attributes of an object, there are
+some kinds of fields: instance variable(non-static field) and class
+variable(static field).
+
+The Naming conversion:
+1. camal cases, like =gearRatio= and =currentGear=.
+2. constant value with upper cases and underscore, like =static final int
+   NUM_GEARS = 6=.
+3. underscore character is NEVER used elsewhere.
+
+** Primitive Data Types
+
+1. The size of a primitive data type is determined. For example, =int= is
+   exactly 32bit.
+2. The size of a =char= is 16-bit representing unicode character.
+
+There are 8 primitive data types: byte, short, int, long, float, double,
+boolean, char. Plus =String= provided by =java.lang.String=.
+
+*** Literals
+Primitive data types are not objects created from a class. It is like a "reader"
+level interpetation.
+
+Integer Literal:
+1. create =long= type with suffix 'l' or 'L', the 'L' is prefered. Otherwise it
+   is of type =int=.
+2. The base is chosen as: '0x' for hex, '0b' for binary. Seems that octal is not
+   supported.
+
+#+begin_src java
+  // The number 26, in decimal
+  int decVal = 26;
+  //  The number 26, in hexadecimal
+  int hexVal = 0x1a;
+  // The number 26, in binary
+  int binVal = 0b11010;
+#+end_src
+
+Floating Literal:
+1. 'F' or 'f' indicate type =float= and 'D' or 'd' indicates type =double=.
+2. If no indicator is specified, =double= is the default.
+#+begin_src java
+  double d1 = 123.4;
+  // same value as d1, but in scientific notation
+  double d2 = 1.234e2;
+  float f1  = 123.4f;
+#+end_src
+
+Character/String Literals:
+1. Single quote ='= for character literal and double quote ="= for string
+   literal, just lik it in C/C++.
+2. Unicode escape: '\u0108' (Captical C with circumflex).
+3. =null= can be used for any reference type.
+
+Underscore in numeric literals: In Java SE 7 and later, any number of
+underscore(_) character can appear anywhere between digits in a numeric
+literal. It is used as eye-candy. Note that they can ONLY be placed between
+digits.
+#+begin_src java
+  long creditCardNumber = 1234_5678_9012_3456L;
+  long socialSecurityNumber = 999_99_9999L;
+  float pi =  3.14_15F;
+  long hexBytes = 0xFF_EC_DE_5E;
+  long hexWords = 0xCAFE_BABE;
+  long maxLong = 0x7fff_ffff_ffff_ffffL;
+  byte nybbles = 0b0010_0101;
+  long bytes = 0b11010010_01101001_10010100_10010010;
+#+end_src
+
+** Arrays
+The length of an array is fixed after the array is created. And the index starts
+from 0.
+
+Declaration of an array is done bye the syntax =type[] name=, as =int[] array=
+for example. Note that declaration did not actually allocate the memory for an
+array. Also form =type name[]= is supported but discouraged. Accessing array in
+java that out of bound will cause an exception.
+
+Initialize an array: =new= operator or =list initializer= (name borrowed from
+C++11):
+#+begin_src java
+  int[] anArray;
+  anArray = new int[3];
+  anArray[0] = 100;
+  anArray[1] = 200;
+  anArray[2] = 300;
+
+  // or
+  int[] anArray = {100, 200, 300};
+#+end_src
+
+Multidimentional array is different to those in C which is actual a single
+array. In java, multidimentional array is an array whose elements are also array
+objects. 
+
+The =System= class provides an method =arraycopy= to efficiently copy data from
+one array to another.
+#+begin_src java
+  public static void arraycopy(Object src, int srcPos,
+                               Object dest, int destPos, int length)
+#+end_src
+
+Many manipulations of array can be achieved by taking advantage of the class
+=java.util.Arrays=. 
+
+* Operators
+Two things must be remembered about operators:
+1. High precedence operators are evaluated before lower ones.
+2. The evaluate order must be noticed when operator with equal precedence
+   appears. All operators are evaluated from LEFT to RIGHT except for assignment
+   operator which evaluates from RIGHT to LEFT.
+
+=>>>= for unsigned right shift, i.e. without sign extension.
+
+** Summary
+   copyied from [[http://docs.oracle.com/javase/tutorial/java/nutsandbolts/opsummary.html][Java Tutorial]]
+
+*** Simple Assignment Operator
+- '=': Simple assignment operator
+*** Arithmetic Operators
+- '+': Additive operator(also used for String concatenation)
+- '-': Subtraction operator
+- '*': Multiplication operator
+- '/': Division operator
+- '%': Remainder operator
+*** Unary Operators
+- '+': Unary plus operator; indicates positive value.
+- '-': Unary minus operator; negates an expression.
+- '++': Increment operator; increments a value by 1.
+- '--': Decrement operator; decrements a value by 1.
+- '!': Logical complement operator; inverts the value of a boolean.
+*** Equality and Relational Operators
+- '==': Equal to
+- '!=': Not Equal to
+- '>':Greater than
+- '>=':Greater than or equal to
+- '<':Less than
+- '<=':Less than or equal to
+
+*** Conditional Operators
+- '&&':Conditional-AND
+- '||':Conditional-OR
+- '?:':Ternary (shorthand for =if-then-else statement=)
+
+*** Type Comparison Opeartor
+- 'instanceof': compares an object to a specific type
+
+*** Bitwise and Bit Shift Operators
+- '~':Unary bitwise complement
+- '<<':Signed left shift
+- '>>':Signed right shift
+- '>>>':Unsigned right shift
+- '&':Bitwise AND
+- '^':Bitwise exclusive OR
+- '|':Bitwise inclusive OR
+
+* Expressions, Statements, and Blocks
+  Operators may be used in building expressions, which compute values;
+  expressions are the core components of statements; statements may be grouped
+  into blocks.
+
+** Statements
+   A statement forms a complete unit of execution. The following type sof
+   expression can be made into a statement by terminating the expression with
+   a semicolo(;).
+   - Assignment expressions
+   - Any use of ++ or --
+   - Method invocations
+   - Object creation expressions
+
+   Thus, unlike Lisp or any other languages, every statement must contain side
+   effects explicitly(such as assignments) or implicitly(such as method
+   invocation.).
+
+   Also, there are two additional statements: declaration statements and
+   control flow statements.
+** Blocks
+   A block is a group of zero or more statements between balanced braces and
+   can be used anywhere a single statement is allowed.
+* Control Flow
+** The switch Statement
+   A =switch= works with the =byte=, =short=, =char=, and =int= primitive data
+   types. It also works with _enumerated_ types, the =String= class, and a few
+   special classes that wrap up certain primitive types: Character, Byte,
+   Short, and Integer.
+
+   Java's =switch= is like that in C, a =case= statement without =break= will
+   fall through into another.
+
+** The for Statement
+   Note that like =for= in C++, you can declare variable inside initialization
+   field and thus to limit the life span of that variable. For example:
+   #+begin_src java
+   for(int i=1; i<11; i++){
+        System.out.println("Count is: " + i);
+   }
+   #+end_src
+
+   =enhanced for= statement is designed for iteraton through Collections and
+   arrays. Just like those in =python=.
+
+   #+begin_src java
+   int[] numbers = 
+       {1,2,3,4,5,6,7,8,9,10};
+   for (int item : numbers) {
+       System.out.println("Count is: " + item);
+   }
+   #+end_src
+
+   Note the =int item= part in the statement, the iterator should be declared
+   inside =for= statement, otherwise syntax error.
+
+** Branching Statements
+   =break= in Java is provided in two forms: unlabeled and labeled. Unlabeled
+   ones will break out the inner most loop, while labeled one will break out
+   the labeled loop, for example:
+   #+begin_src java
+    search:
+        for (i = 0; i < arrayOfInts.length; i++) {
+            for (j = 0; j < arrayOfInts[i].length;
+                 j++) {
+                if (arrayOfInts[i][j] == searchfor) {
+                    foundIt = true;
+                    break search;
+                }
+            }
+        }
+   // break search will jump here.
+   #+end_src 
+
+   Note that different to =goto= in C/C++, labeled break statement do not pass
+   control flow to the labeled position, instead, control flow is transferred
+   to the statement immediately following the labeded(terminated) statement.
+
+   Similarly, =continue= also have labeled and unlabeled form.
+
+* Docs
+- [[http://docs.oracle.com/javase/tutorial/extra/certification/javase-7-programmer1.html#basics][Java 7 programmer]]

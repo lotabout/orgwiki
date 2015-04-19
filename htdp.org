@@ -89,7 +89,7 @@ We can conclude it into 4 elements when designing:
   
 ** Conditional Computations
    Review the =cond= expression:
-   #+BEGIN_SRC scheme
+   #+BEGIN_SRC racket
      (cond
       [condition-expr-1 result-expr-1]
       [condition-expr-2 result-expr-2]
@@ -126,7 +126,7 @@ We can conclude it into 4 elements when designing:
    *template* of dealing with enumerations.
    
    Example(From the book):
-#+BEGIN_SRC scheme
+#+BEGIN_SRC racket
 ; A TrafficLight shows one of three colors:
 ; – "red"
 ; – "green"
@@ -171,7 +171,7 @@ We can conclude it into 4 elements when designing:
    
    That means when contruct =cond= expression for these two cases, the
    main difference is how to write the _condition expressions_.
-   #+BEGIN_SRC scheme
+   #+BEGIN_SRC racket
      ; for enumeration
      (define (iter-enumeration x)
        (cond
@@ -289,7 +289,7 @@ self-referential data.
    It is critical to have unified concept.
 
    For the definition below:
-   #+BEGIN_SRC scheme
+   #+BEGIN_SRC racket
      ; A List-of-tmperatures is one of:
      ; - empty
      ; - (cons CTemperature List-of-temperatures)
@@ -298,7 +298,7 @@ self-referential data.
    #+END_SRC
    It will lead to inconsistancy when the List is =empty=. Define an
    =average= function for example
-   #+BEGIN_SRC scheme
+   #+BEGIN_SRC racket
      ; List-of-tempeartures -> Number
      ; compute the average tempearture
      (define (average alot)
@@ -307,7 +307,7 @@ self-referential data.
    #+END_SRC
    
    One solution is treat this definition as an itemization:
-   #+BEGIN_SRC scheme
+   #+BEGIN_SRC racket
      ; List-of-temperatures -> Number
      ; compute the average tempearture
      (define (average alot)
@@ -321,7 +321,7 @@ self-referential data.
    broke this intuition.
    
    So, a better way would be refine the definition:
-   #+BEGIN_SRC scheme
+   #+BEGIN_SRC racket
      ; A NEList-of-temperatures is one of:
      ; – (cons CTemperature empty)
      ; – (cons CTemperature NEList-of-temperatures)
@@ -393,14 +393,14 @@ self-referential data.
    
 ** Similarities In Data Definition
    For the following two data definition:
-   #+BEGIN_SRC scheme
+   #+BEGIN_SRC racket
      ; A List-of-numbers(short Lon) is one of: ; A List-of-String(short Los) is one of:
      ; - empty                                 ; - empty
      ; - (cons Number List-of-numbers)         ; - (cons Number List-of-String)
    #+END_SRC
    
    We can abstract it as:
-   #+BEGIN_SRC scheme
+   #+BEGIN_SRC racket
      ; A [List-of ITEM] is one of:
      ; - empty
      ; - (cons ITEM [List-of ITEM])
@@ -443,7 +443,7 @@ self-referential data.
   Once we view _lambda_ as the primitive concept, functions becomes
   first class value. And function definitions are just syntax suger
   for define a lambda values. And _lambda_ is like a constructor.
-  #+begin_src scheme
+  #+begin_src racket
     (define (f x)
       (+ (sin x) x (* 3 x)))
     ; is syntax suger for the following:

@@ -18,3 +18,41 @@ Key sequence =~.= for disconnect.
 #+begin_src sh
   at -c <job>
 #+end_src
+
+* shadowsock
+** Turn shadowsocks into http proxy
+#+begin_example 
+  First run polipo with parent proxy set to Shadowsocks:
+
+  apt-get install polipo
+  service polipo stop
+  polipo socksParentProxy=localhost:1080
+
+  Then you can play with the HTTP proxy:
+
+  http_proxy=http://localhost:8123 apt-get update
+
+  http_proxy=http://localhost:8123 curl www.google.com
+
+  http_proxy=http://localhost:8123 wget www.google.com
+
+  git config --global http.proxy 127.0.0.1:8123
+  git clone https://github.com/xxx/xxx.git
+  git xxx
+  git xxx
+  git config --global --unset-all http.proxy
+#+end_example
+
+- [[https://github.com/clowwindy/shadowsocks/wiki/Convert-Shadowsocks-into-an-HTTP-proxy][Convert Shadowsocks into a HTTP Proxy]]
+
+Note that some applications need to set https proxy, so we need to add
+the following:
+#+begin_example
+  export https_proxy=http://localhost:8123
+#+end_example
+
+* unzip
+** turn all filenames to lowercases
+#+begin_src sh
+  unzip -LL xxx.zip
+#+end_src

@@ -1,0 +1,31 @@
+#+title: C Notes
+
+Different to C++ Notes, this page concern only C-related questions.
+
+* FAQs
+** How to cast function pointer
+The requirement is as follows: If you got a function that need a
+callback function:
+#+begin_src c
+  void process(void (*callback)(void *))
+#+end_src
+Note here that callback can have one argument which is type =void
+*=. Now perhaps we have our own version of callback function which
+takes a =char *= argument:
+#+begin_src c
+  void my_callback(char *msg)
+  {
+      printf("%s\n", msg);
+  }
+#+end_src
+When we want to feed =my_callback= to function =process=, the compiler
+will report warning.
+
+In short, the behavior of casting function pointers(no matter explict
+or not) is undefined. However in practice, if the function parameters
+are pointer type, they are of the same size, just like the case
+above. So it will work but that is non-standard.
+
+For more detail, check the link below.
+
+- [[http://stackoverflow.com/questions/559581/casting-a-function-pointer-to-another-type][Casting a Function Pointer to Another Type]]
