@@ -1,5 +1,29 @@
 #+title: Hibernate Notes
 
+
+* Hibernate Syntax (mapping & Annotation)
+** Mapping with JPA
+JPA annotations are in the =javax.persistence.*= package.
+
+*** Making a POOJO as persistent entity
+#+begin_src java
+  @Entity
+  public class Flight implements Serializable {
+      Long id;
+
+      @Id
+      public Long getId() { return id; }
+
+      public void setId(Long id) { this.id = id; }
+  }
+#+end_src
+    
+=@Entity= declares the class as an entity (i.e. a persistent POJO
+class), =@Id= declares the identity property of this entity.
+
+**** Defining the table
+
+
 * Hibernate Tools with maven
 The key here is a plugin named
 [[http://mojo.codehaus.org/hibernate3-maven-plugin/][hibernate3-maven-plugin]]. We
