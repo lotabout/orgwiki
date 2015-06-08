@@ -1,0 +1,146 @@
+#+title: JavaScript Notes
+
+* JS Box metrics
+<<sec:js-box-metrics>>
+
+There are several concepts of metrics used in javascript.
+
+** CSS width/height
+
+Without =box-sizing: border-box= being set, it is the size of the
+_content area_, which lies inside the padding. CSS properties can be
+set using =element.style= property and retrieved using
+=getComputedStyle()/currentStyle=.
+
+** clientWidth/Height
+
+Size of the =client area=: content area with padding, but without scrollbars.
+
+#+begin_example
+  clientWidth = CSS-width + paddings - scrollbar-width;
+  clientHeight = CSS-height + paddings - scrollbar-height;
+#+end_example
+
+NOTE: the scrollbars will first occupy the padding area, and if the
+padding area is not large enough, it will further occupy the content
+area, meanwhile the CSS width/height stays unchanged. Thus as in the
+following image where =padding > scrollbar-width=:
+
+[[http://javascript.info/files/tutorial/browser/dom/metric2.png]]
+
+The size can be calculated:
+#+begin_example
+  clientWidth = 300(width) + 40(paddings) - 16(scrollbar) = 324
+  clientHeight = 200(height) + 40(paddings) = 240
+#+end_example
+
+However, if the =padding < scrollbar-width=:
+
+[[http://javascript.info/files/tutorial/browser/dom/metricClientWidth.png]]
+
+The _CSS width_ stays unchanged(300px), while the client width:
+
+#+begin_example
+  clientWidth = 300(width) + 0(paddings) - 16(scrollbar) = 284
+#+end_example
+
+Thus the =clientWidth/clientHeight= reflect the real size of the content.
+
+** scrollWidth/Height
+Content area width and height _including_ the scrolled out part. That
+means they are the same as clientWidth/Height, but includes full
+scrollable area.
+
+** scrollTop/scrollLeft
+The size of scrolled out part: vertical and horizontal. The value is
+always in pixels.
+
+NOTE that you can set values to this property, the browser will scroll
+the document accordingly.
+
+** offsetWidth/Height
+Outer box width/height, full size with borders, but without margins.
+
+** clientTop/Left
+The indent of _client area_ from box outer corner.
+
+[[http://javascript.info/files/tutorial/browser/dom/metric3.png]]
+
+Normally, the value is:
+#+begin_example
+clientTop = border-top-width
+clientLeft = border-left-width
+#+end_example
+
+However, in case of a _right-to-left_ document, where the scrollbar
+appears on the top and left, the value is:
+#+begin_example
+clientTop = border-top-width + scrollbar-width
+clientLeft = border-left-width + scrollbar-width
+#+end_example
+
+** offsetParent, offsetLeft/Top
+Properties =offsetLeft= and =offsetTop= reflects a relative shift of
+an element from its =offsetParent=.
+
+The =offsetParent= is the closest(nearest in the containment
+hierarchy) *positioned* containing element. If the element is
+non-positioned, but the ancestor is a table cell(=td=, =th= or
+=table=) or root element (=html= in standards compliant mode; =body=
+in quirks rendering mode) is the =offsetParent=. See
+[[http://dev.w3.org/csswg/cssom-view/#dom-htmlelement-offsetparent][DOM
+HTML Element -- offsetparent]] for specification.
+
+[[http://javascript.info/files/tutorial/browser/dom/metricOffset.png]]
+
+** Summary
+1. The _CSS width/height_ is the width of the content area, and will
+   stick to the value it is.
+2. The =Client Area= is the content area plus padding, but do not include
+   the scrollbar.
+3. The =Offset Area= is the whole content of an element except the margin.
+4. All the width/height and left/top properties are calculated
+   according to what they are(client/offset area).
+
+[[http://javascript.info/files/tutorial/browser/dom/metricSummary.png]]
+
+
+
+** References
+[[http://javascript.info/tutorial/metrics][JS metrics]]
+
+* JS Position/Offset
+
+The [[sec:js-box-metrics][previous section]] introduced the box model
+of javascript. However, there are still two important requirement we
+have: get the position of current element.
+
+Two concept will be involed here: document and viewport.
+
+[[https://developer.mozilla.org/en/docs/Web/API/Document][Document]]
+serves as an entry point into the web page's content(The DOM
+tree). You can treat it as the =<html>= object in HTML source
+code. And JS provide a variable =document= for it.
+
+[[https://developer.mozilla.org/en-US/docs/Glossary/Viewport][Viewport]]
+represents a polygonal(normally rectangular) area in computer graphics
+currently being viewed. So we can treat it as the browser that
+displays contents. 
+
+I actually cannot distinguish viewport from
+[[https://developer.mozilla.org/en-US/docs/Web/API/Window][window]],
+it seems that viewport is an abstract concept that refer to any
+view-able area, while window refers to the actual "physical" object.
+
+Because the window size can scroll, so the position of an element
+could be relative to either document or viewport.
+
+As for those relative to the *viewport*, JS provide us a handy function:
+[[https://developer.mozilla.org/en-US/docs/Web/API/Element/getBoundingClientRect][getBoundingClientRect()]]
+that will return the size of an element and its position relative to viewport.
+
+As for those relative to the *document*, JS do not have direct answer,
+however the JQuery function [[http://api.jquery.com/offset/][.offset]]
+is an alternate to that. Of course you can implement it in plain JS as
+well, You can check the JQuery implementation
+[[http://james.padolsey.com/jquery/#v%3D1.11.2&fn%3DjQuery.fn.offset][here]].
