@@ -50,3 +50,12 @@ Check the following link for the rules of finding components.
 
 It seems that when some actions are taken and the bean is updated
 then the UI will be updated also.
+
+** where does JSF validate the input?
+JSF as it is, *always perform the validation on server side*. The
+input validation is a part of component lifecycle. The validation that
+feels like client-side validation is when we use Ajax support in
+JSF. It submits only the necessary part of fields and they are still
+validated on the server side.
+
+- [[http://stackoverflow.com/questions/10297853/where-does-jsf-validate-the-input-values-back-end-or-front-end][Where does JSF validate the input values? Back-End or Front-end?]]
