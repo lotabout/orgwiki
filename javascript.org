@@ -144,3 +144,15 @@ however the JQuery function [[http://api.jquery.com/offset/][.offset]]
 is an alternate to that. Of course you can implement it in plain JS as
 well, You can check the JQuery implementation
 [[http://james.padolsey.com/jquery/#v%3D1.11.2&fn%3DjQuery.fn.offset][here]].
+
+* Event Position
+- clientX/clientY :: the coordinate of the mouse pointer relative
+     to the current window(viewport), when the event was triggered.
+- screenX/screenY :: the coordinate of the mouse pointer, relative to
+     the screen, when the event was triggered.
+- pageX/pageY :: the coordinate of the event relative to the whole
+                 document. This is non-standard.
+- layerX/layerY :: the coordinate of the event relative to the current
+                   layer. Non-standard.
+
+[[http://web.jobbole.com/82419/][About JS event]]
