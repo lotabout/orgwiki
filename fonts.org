@@ -1,0 +1,12 @@
+#+title: Fonts
+
+[[https://www.google.com/fonts][Google Web Fonts]]
+
+* Fonts for Brand
+
+** Berkshire Swash
+
+** Kaushan Script
+
+** References
+[[http://speckyboy.com/2013/07/22/google-web-fonts/][Fantastic Google Web Fonts for Headings and Body Text]]

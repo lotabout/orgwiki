@@ -1,0 +1,71 @@
+#+title: SQL Notes
+
+* Pagination
+
+** Pagination in Hibernate
+The article [[http://www.baeldung.com/hibernate-pagination][Hibernate
+pagination]] talked about 3 way of pagination in hibernate, but there
+are actually two.
+
+The first one use the =setFirstResult/setMaxResults= API, the other
+uses the =scrollableResult= API. 
+
+The first one will translate the query into SQL that directly controls
+the rownumber to be fetched(described in section
+[[sec:sql-pagination-rownum]]). Thus it will need several query to the
+database to retrieve all the results.
+
+The =scrollableResult= API will retrieve all the result in one query
+and save them in the memory. Then utilize the java programe to
+implement the pagination feature.
+
+So it is a matter of balance between the speed and size. If your data
+size is fairly small, =scrollableResult= will provide more flexiable
+control of the result. However large dataset will blow your RAM
+off. So consider use =setFirstResult/setMaxResults= in this case.
+
+** SQL Pagination
+
+*** Pagination through rownum
+<<sec:sql-pagination-rownum>>
+This method is how the hibernate translated its query into SQL pagination.
+
+We begin with [[http://www.w3schools.com/sql/sql_top.asp][SQL RowNum]]
+which limit the lines of the  result of the =select= query.
+
+#+begin_src sql
+// this is oracle syntax
+select * from table_name where rownum <= number;
+#+end_src
+
+Note that that(at least in oracle) =rownum= is not actually refered to
+the row number, thus the following query that trys to get rows whose
+row number is greater than =number= will not work:
+#+begin_src sql
+SELECT * FROM table_name WHERE ROWNUM > number;
+#+end_src
+
+Thus, we tries to get the actual row number of the query
+results. According to
+[[http://stackoverflow.com/questions/4552769/sql-rownum-how-to-return-rows-between-a-specific-range][this
+stackoverflow question]], we can select records whose row number
+between a specific range by:
+
+#+begin_src sql
+SELECT * from (SELECT t.*, ROWNUM r FROM table_name t ) WHERE r >= 2 AND r < 10;
+#+end_src
+
+In Transact-SQL syntax:
+
+#+begin_src sql
+SELECT * from (SELECT t.*, ROW_NUMBER() OVER(ORDER BY column_name) AS r FROM table_name t ) WHERE r >= 2 AND r < 10;
+#+end_src
+
+Note that the above two result will contain the row number in their
+result.
+
+This is it, you can manually control over the row number range to be
+fetched. Thus implements the pagination.
+
+*** Further Reading
+- [[http://www.inf.unideb.hu/~gabora/pagination/results.html][Techniques for pagination in SQL]]

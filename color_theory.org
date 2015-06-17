@@ -1,0 +1,75 @@
+#+title: Notes on Color Theory
+
+* How to apply color scheme into design
+
+** Material Design color guide
+
+#+begin_quote
+limit the selection of colors by choosing three hues from the primary
+palette and one accent color from the secondary pallete.
+#+end_quote
+
+And according to [1], we need a "primary color" for brand; a darker
+version for status bar and contextual app bars; and an accent color
+for UI controls like checkboxes and text fields.
+
+
+And Use opacity for text, icons, and dividers.
+
+| type                 | black on white | white on black |
+|----------------------+----------------+----------------|
+| text                 |            87% |           100% |
+| secondary text/Icons |            54% |            70% |
+| Disabled/Hint Text   |            26% |            30% |
+| Dividers             |            12% |            12% |
+
+These are for black(#000) and white(#FFF) colors. For black/white text
+on colored background, check the color palette.
+
+This rule however gives us some information:
+1. Never use pure white or black(except for 100% white).
+2. Normally keep using black or white for texts.
+3. Choose black or white text depending on the background color.
+
+#+begin_quote
+use the accent color for your primary action button and components
+like switches or slides.
+#+end_quote
+
+A very important message from the examples on the web page is that
+accent colors are used in small area for grabbing the user's
+attention, usually used for primary actions.
+
+#+begin_quote
+If your accent color is too light or dark to sufficiently contrast
+with the background color, use a darker or lighter tint of the accent
+color instead. If your accent color doesn’t work at all, use the 500
+version of your primary color on white backgrounds. If your background
+color is the 500 version of your primary color, make your accent color
+either white 100% or black 54%.
+#+end_quote
+
+So the key point here is to ensure enough contrast between the
+background and the accent color. Also note the *54% black*, another
+clue of avoiding usage of pure black.
+
+- [[http://www.google.com/design/spec/style/color.html#color-ui-color-application][UI color application]]
+** Top 10 Tips for adding color to Your space
+Article from [[http://www.hgtv.com/design/decorating/color/top-10-tips-for-adding-color-to-your-space][Top 10 Tips for Adding Colors to Your Space]]
+*** Use the 60-30-10 Rule.
+Human tends to see an overall theme in the 60 percent hue, unifying
+the coloration. The 30 percent provides visual interest and the 10
+percent, not unlike jewelry, provides that little spark of sparkle.
+
+So:
+- 60% of a dominant color -- primary color
+- 30% of a secondary color
+- 10% of an accent color
+*** Don't forget the black.
+Adding small piece of black will claify and enhance all the other colors.
+
+
+* Footnotes
+
+[1] [[http://developer.android.com/training/material/theme.html#ColorPalette][Color Palette in Android Development]]
+

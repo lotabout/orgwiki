@@ -69,6 +69,31 @@ eclim is not provided and fallback to other backends.
 After all these configuration, one last thing to remember: start up the eclim
 server manually, i.e. "eclimd".
 
+* Profiler
+
+** Emacs Native Profiler
+[[http://cx4a.org/hack/emacs-native-profiler.html][Emacs Native
+Profiler]] is directly included in Emacs 24.
+
+Usage:
+1. =M-x profiler-start=
+2. do something you want to profiling
+3. =M-x profiler-stop= (Optional)
+4. =M-x profiler-report=
+
+Then use =M-x profiler-report-expand-entry= to expand the entry(don't
+know if there is a default key binding).
+
+** ELP
+This is also a build in profiler, it can be used to profile a specific
+package, function etc.
+
+Usage:
+1. =M-x elp-instrument-xxx= (xxx refers to the mode you want to use,
+   such as "package" or "function")
+2. do something
+3. =M-x elp-results= to check the results.
+
 * FAQs
 ** How to insert not graphic characters?
 1. Insert =C-q= First.

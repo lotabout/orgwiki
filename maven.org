@@ -1,5 +1,13 @@
 #+title: maven
 
+* Maven with Web application
+
+** Notes
+*** Generate JSF eclipse application
+It seems that using only =mvn eclipse:eclipse= will have some
+problems generating the project, instead use =mvn eclipse:eclipse
+-Dwtpversion=2.0= to include WTP support.
+
 * FAQs
 ** how to run a main class
 

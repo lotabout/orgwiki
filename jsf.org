@@ -1,0 +1,61 @@
+#+title: JSF Notes
+
+
+
+* FAQ
+
+** How to find components by ID?
+(These contexts are copied from the link below)
+
+A search expression consists of either an identifier (which is matched
+exactly against the id property of a UIComponent, or a series of such
+identifiers linked by the UINamingContainer#getSeparatorChar character
+value. The search algorithm should operates as follows, though
+alternate alogrithms may be used as long as the end result is the
+same:
+
+- Identify the UIComponent that will be the base for searching, by
+  stopping as soon as one of the following conditions is met:
+  - If the search expression begins with the the separator character 
+    (called an "absolute" search expression), the base will be the
+    root UIComponent of the component tree. The leading separator
+    character will be stripped off, and the remainder of the search
+    expression will be treated as a "relative" search expression as
+    described below.
+  - Otherwise, if this UIComponent is a NamingContainer it will serve
+    as the basis.
+  - Otherwise, search up the parents of this component. If a
+    NamingContainer is encountered, it will be the base.
+- Otherwise (if no NamingContainer is encountered) the root
+  UIComponent will be the base.
+  - The search expression (possibly modified in the previous step) is
+    now a "relative" search expression that will be used to locate the
+    component (if any) that has an id that matches, within the scope
+    of the base component. The match is performed as follows:
+  - If the search expression is a simple identifier, this value is
+    compared to the id property, and then recursively through the
+    facets and children of the base UIComponent (except that if a
+    descendant NamingContainer is found, its own facets and children
+    are not searched).
+  - If the search expression includes more than one identifier
+    separated by the separator character, the first identifier is used
+    to locate a NamingContainer by the rules in the previous bullet
+    point. Then, the findComponent() method of this NamingContainer
+    will be called, passing the remainder of the search expression.
+
+Check the following link for the rules of finding components.
+- [[http://stackoverflow.com/questions/8634156/cannot-find-component-with-expression-foo-referenced-from-bar-fajax-con][Cannot find component with expression...]]
+
+** How is the beans connected with UI components?
+
+It seems that when some actions are taken and the bean is updated
+then the UI will be updated also.
+
+** where does JSF validate the input?
+JSF as it is, *always perform the validation on server side*. The
+input validation is a part of component lifecycle. The validation that
+feels like client-side validation is when we use Ajax support in
+JSF. It submits only the necessary part of fields and they are still
+validated on the server side.
+
+- [[http://stackoverflow.com/questions/10297853/where-does-jsf-validate-the-input-values-back-end-or-front-end][Where does JSF validate the input values? Back-End or Front-end?]]
