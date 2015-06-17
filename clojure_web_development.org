@@ -1,0 +1,209 @@
+#+title: Clojure Web Development
+
+Note that much of the contents are from book "Web Development with Clojure".
+
+* Ring
+Ring applications contains four basic components: the *handler*, the *request*,
+the *response* and the *middleware*.
+
+The handler are functions that process the incoming requests. They accept
+request maps and return response maps.
+
+#+begin_src clojure
+  (defn handler [request-map]
+    {:status 200
+     :headers {"Content-Type" "text/html"}
+     :body (str "<html><body> your IP is: "
+                (:remote-addr request-map)
+                "</body></html>")})
+#+end_src
+
+The above code accept a HTTP request which is represented by a clojure map. Then
+it serves an HTML string with the client's IP address and sets the response
+status to 200.
+
+Note that the underground of Web Applications are parsing HTTP requests and
+generating HTTP responses. So the Ring is here to simplify this process.
+
+The above operation is so common that Ring API provides a helper function for
+generating such responses:
+
+#+begin_src clojure
+  (defn handler [request-map]
+    (response
+     (str "<html><body> your IP is: "
+          (:remote-addr request-map)
+          "</body></html>")))
+#+end_src
+
+So all that =response= does is simplify the process of creating a response map
+just like we've did in the last example. And that's it and nothing else.
+
+** Middleware
+A middleware handler is a function that accepts an existing handler with some
+optional parameters, then returns a new handler with some added
+behavior. Example:
+
+#+begin_src clojure
+  (defn handler [request]
+    (response
+     (str "<html><body> your IP is:(:remote-addr request)
+  "</body></html>")))
+  "
+  (defn wrap-nocache [handler]
+    (fn [request]
+      (let [response (handler request)]
+        (assoc-in response [:headers "Pragma"] "no-cache"))))
+  (def app (wrap-nocache handler))
+
+#+end_src
+
+* Compojure
+Compojure is a routing library built on top of Ring. It provides an easy way to
+associate handler functions with a URL and an HTTP method. A route might look
+like:
+#+begin_src clojure
+  (GET "/:id" [id] (str "<p>the id is " id "</p>"))
+#+end_src
+There are several HTTP methods: GET, POST, PUT, DELETE and HEAD.
+
+In the above example, =GET= is a function provided by =compojure.core=. It takes
+some arguments and return a Ring handler. So we don't have to deal with the
+details of a HTTP request or response(such as status, headers) with the help of
+a route. We can think in a higer level, i.e. URL or HTTP method.
+
+Since we're likely to have more than one single route in our application,
+compojure provides the =routes= function that create a Ring handler from
+multiple routes.
+
+#+begin_src clojure
+  (defn foo-handler []
+    "foo called")
+
+  (defn bar-handler [id]
+    (str "bar called, id is: " id))
+
+  (def handler
+    (routes
+     (GET "/foo" [] (foo-hanler))
+     (GET "/bar/:id" [id] (bar-handler id))))
+#+end_src
+
+Well, normally we'll need a route(or called a hander) to deal with one
+function(for example one HTML page). But we will want to have a hander to
+combine all these handlers and dispatch requests accordingly. So that is what
+=routes= does.
+
+Compojure simplify defining routes more over:
+#+begin_src clojure
+  (defroutes handler
+    (GET "/foo" [] (foo-handler))
+    (GET "/bar/:id" [id] (bar-handler id)))
+#+end_src
+
+** Accessing Request Parameters
+If some routes need to access the request map to access the request parameters,
+we can declare the map as the second argument to the route.
+#+begin_src clojure
+  (GET "/foo" request (interpose ", " (keys request)))
+#+end_src
+
+Fetching parameters from a request is quite common, so compojure support
+destructuring feature for route definition:
+#+begin_src clojure
+  (POST "/" [name message] (save-message name message))
+
+  ;;; or
+  (GET "/:foo" {{value "name"} :params} (str "The value of name is " value))
+  (GET "/" [x y :as r] (str x y r))
+#+end_src
+
+Armed with Ring and Compojure, we can easily create pages and routes for our
+site. However, any nontrival application requires many other features, such as
+page templating, session management, and input validation. We'll seek for other
+utilities to finish that.
+
+* Application Architecture
+The major components that will be present in most applications are as follows:
+- handler -- This namespace is responsible for handling requests and responses.
+- routes -- The routes contain the core of our application, such as the logic to
+  render pages and handle client requests
+- model -- This namespace is reserved for the data model of the application and
+  the persistencce layer
+- views -- This namespace contains common logic for generating the applcation layout.
+
+
+* Liberator
+
+A set of keys defined by the Liberator application programming interface
+represents each resource. Specific actions are in turn associated with each
+key. A key can fall into one of four categories:
+- Decision
+- Handler
+- Action
+- Declaration
+Each key can be associated with either constants or fucntions. The functions
+should accept a single parameter that is the current contex, and return a
+variety of responses.
+
+** Decision
+The decisions are used to figure out how to handle the client request. The
+decision keys end with a question mark (?) and their handler must evaluate to a
+boolean value.
+
+1. A boolean value is returned indicating the result of the decision
+2. A map is returned. The decision is assumed to have been evaluated to =true=
+   and the contents of the map are merged with the response map.
+3. A vectore is returned. It must contain a boolean value indicating the
+   outcome, followed by a map to be mreged with the response.
+
+When any decision has a negtive outime, its corresponding HTTP code will be
+returned to the client.
+#+begin_src clojure
+  (defresource home
+    :service-available? false
+    :handle-ok "Hello World"
+    :etag "fixed-etag"
+    :available-media-types ["text/plain"])
+#+end_src
+If we reload the page, we'll see the 503 response type associated with the
+*Service not available* response.
+
+** Creating Handlers
+A handler function should return a standard Ring response. Handler keys start
+with the =handle-= prefix. The =handle-ok= key in the previous example belongs
+to handle keys.
+
+For example, if we wanted to return a specific response when the service is not
+available, we could do the following:
+#+begin_src clojure
+  (defresource home
+    :service-available? false
+    :handle-service-not-available
+    "Service is currently unavailable...")
+#+end_src
+
+** Taking Actions
+An action represents an update of the current state by the client, such as a
+PUT, POST or DELETE request. The action keys end with an exclamation point(!) to
+indicate that they're mutating the application's internal state.
+
+Once an action occurs, we can return the result to the client using the
+=handle-creat= handler.
+
+** Declaration
+Declarations are used to indicate that resource's capabilities. For example, our
+resource uses the =available-media-type= declaration to specify that it returns
+a response of type =text/plain=.
+
+* Ring Notes
+How to send response with =edn= format? With the default setup by luminus, we
+only need to do this:
+
+#+begin_src clojure
+  (GET "/comments" [] (-> (response {:data @comments})
+                          (header "Content-Type" "Application/edn")))
+#+end_src
+
+That is: send a response and replace its =Content-Type= in the header to
+=Application/edn=, and that is done.

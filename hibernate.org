@@ -1,6 +1,207 @@
 #+title: Hibernate Notes
 
-* Hibernate Tools with maven
+* Hibernate Annotations
+
+** Mapping Entities
+
+*** Mapping with JPA
+JPA annotations are in the =javax.persistence.*= package.
+
+**** Marking a POJO as persistent entity
+#+begin_src java
+  @Entity
+  public class Flight implements Serializable {
+      Long id;
+
+      @Id
+      public Long getId() { return id; }
+
+      public void setId(Long id) { this.id = id; }
+  }
+#+end_src
+
+=@Entity= declares the class as an entity(i.e. a persistent POJO class). =@Id=
+declares the identifier property of this entity.
+
+***** Defining the table
+#+begin_src java
+  @Entity
+  @Table(name="tbl_sky",
+      uniqueConstraints = {@UniqueConstraint(columnNames={"month", "day"})}
+  )
+  public class Sky implements Serializable {
+     ...
+  }
+#+end_src
+If no =@Table= is specified, then the default values are used: the unqualified
+class name of the entity.
+
+**** Mapping simple properties
+
+***** Declaring basic property mappings
+#+begin_src java
+  public transient int counter; //transient property
+
+  private String firstname; //persistent property
+
+  @Transient
+  String getLengthInMeter() { ... } //transient property
+
+  String getName() {... } // persistent property
+
+  @Basic
+  int getLength() { ... } // persistent property
+
+  @Basic(fetch = FetchType.LAZY)
+  String getDetailedComment() { ... } // persistent property
+
+  @Temporal(TemporalType.TIME)
+  java.util.Date getDepartureTime() { ... } // persistent property
+
+  @Enumerated(EnumType.STRING)
+  Starred getNote() { ... } //enum persisted as String in database
+#+end_src
+
+***** Declaring column attributes
+The column(s) used for a property mapping can be defined using the =@Column=
+annotation. Use it to override default values.
+
+#+begin_src java
+  @Entity
+  public class Flight implements Serializable {
+  ...
+  @Column(updatable = false, name = "flight_name", nullable = false, length=50)
+  public String getName() { ... }
+#+end_src
+
+Default values:
+#+begin_src java
+  @Column(
+      name="colu(1)mnName";
+      boolean un(2)ique() default false;
+      boolean nu(3)llable() default true;
+      boolean in(4)sertable() default true;
+      boolean up(5)datable() default true;
+      String col(6)umnDefinition() default "";
+      String tab(7)le() default "";
+      int length(8)() default 255;
+      int precis(9)ion() default 0; // decimal precision
+      int scale((10)) default 0; // decimal scale
+#+end_src
+
+***** Embedded objects(aka components)
+It is possible to declare an embedded component inside an entity and even
+override its column mapping. Component classes have to be annotated at the clas
+level with the =@Embeddable= annotation. It is possible to override the column
+mapping of an embedded object for a particular entry using the =@Embedded= and
+=@AttributeOverride= annotation in the associated property.
+
+#+begin_src java
+  @Entity
+  public class Person implements Serializable {
+
+      // Persistent component using defaults
+      Address homeAddress;
+
+      @Embedded
+      @AttributeOverrides( {
+              @AttributeOverride(name="iso2", column = @Column(name="bornIso2") ),
+              @AttributeOverride(name="name", column = @Column(name="bornCountryName") )
+      } )
+      Country bornIn;
+      ...
+  }
+
+  @Embeddable
+  public class Address implements Serializable {
+      String city;
+      Country nationality; //no overriding here
+  }
+
+  @Embeddable
+  public class Country implements Serializable {
+      private String iso2;
+      @Column(name="countryName") private String name;
+
+      public String getIso2() { return iso2; }
+      public void setIso2(String iso2) { this.iso2 = iso2; }
+
+
+      public String getName() { return name; }
+      public void setName(String name) { this.name = name; }
+      ...
+  }
+#+end_src
+
+**** Mapping identifier properties
+
+***** Generating the identifier property
+JPA defines five types of identifier generation strategies:
+- AUTO -- either identify column, sequence or table depending on the underlying
+  DB
+- TABLE -- table holding the id
+- IDENTITY -- identity column
+- SEQUENCE -- sequence
+- identity copy -- the identity is copied from another entity.
+
+Example usage:
+#+begin_src java
+  @Id @GeneratedValue(strategy=GenerationType.IDENTITY)
+  public Long getId() { ... }
+#+end_src
+
+Application level generators:
+#+begin_src java
+  <table-generator name="EMP_GEN"
+              table="GENERATOR_TABLE"
+              pk-column-name="key"
+              value-column-name="hi"
+              pk-column-value="EMP"
+              allocation-size="20"/>
+
+  //and the annotation equivalent
+
+  @javax.persistence.TableGenerator(
+      name="EMP_GEN",
+      table="GENERATOR_TABLE",
+      pkColumnName = "key",
+      valueColumnName = "hi"
+      pkColumnValue="EMP",
+      allocationSize=20
+  )
+
+  <sequence-generator name="SEQ_GEN"
+      sequence-name="my_sequence"
+      allocation-size="20"/>
+
+  //and the annotation equivalent
+
+  @javax.persistence.SequenceGenerator(
+      name="SEQ_GEN",
+      sequenceName="my_sequence",
+      allocationSize=20
+  )
+#+end_src
+
+The next example shows the definition of a sequence generator in a class scope.
+#+begin_src java
+  @Entity
+  @javax.persistence.SequenceGenerator(
+      name="SEQ_STORE",
+      sequenceName="my_sequence"
+  )
+  public class Store implements Serializable {
+      private Long id;
+
+      @Id @GeneratedValue(strategy=GenerationType.SEQUENCE, generator="SEQ_STORE")
+      public Long getId() { return id; }
+  }
+#+end_src
+
+***** Composite identifier
+
+* Hibernate Tools
+** Use Hibernate Tools with Maven
 The key here is a plugin named
 [[http://mojo.codehaus.org/hibernate3-maven-plugin/][hibernate3-maven-plugin]]. We
 can run hibernate tools in maven with its help.
@@ -90,3 +291,84 @@ Note that hibernate-tools may have conflictions with hibernate 3.5+. The
 =3.3.2.GA= version used here is the known version that works. The generated
 resource can be used with higer version. So we only need =3.3.2.GA= to reverse
 engineering
+
+
+** Some Notes on Reverse Engineering
+
+*** How to set the "owner" of a many-to-many relationship
+
+Perhaps we have a many-to-many relationship as:
+#+begin_example
+  +--------+                                            +---------+
+  | User   | (1) ------- (n) +-----------+ (n) ---- (1) | Project |
+  +--------+                 | Applicant |              +---------+
+  | UID(PK)|                 +-----------+              | PID (PK)|
+  +--------+                 | PID   (FK)|              +---------+
+                             | UID   (FK)|
+                             +-----------+
+#+end_example
+
+What is a "owner"? In the following example, "Project" is the owner:
+#+begin_src java
+  // In class "Projects" (the owner side)
+
+  @ManyToMany(fetch=FetchType.LAZY)
+      @JoinTable(name="applicants", catalog="hiber", joinColumns = {
+          @JoinColumn(name="projectid", nullable=false, updatable=false) }, inverseJoinColumns = {
+          @JoinColumn(name="username", nullable=false, updatable=false) })
+      public Set<Users> getUserses() {
+          return this.userses;
+      }
+#+end_src
+
+while the "owning side" is:
+#+begin_src java
+  // in class "Users" (the owning side)
+
+  @ManyToMany(fetch=FetchType.LAZY, mappedBy="userses")
+      public Set<Projects> getProjectses() {
+          return this.projectses;
+      }
+#+end_src
+
+Being the "owner side" means that update the =userses= fields of a =Project= will
+add or update the required "users" in "User" table and add/update corresponding
+rows in the association table "Applicant".
+
+#+begin_src java
+  Users user = (Users)session.get(Users.class, "root");  // must be existed.
+  Projects project = new Projects(10, "another project");
+  project.setUserses(new HashSet<Users>());
+  project.getUserses().add(user);
+
+  session.saveOrUpdate(project);
+
+  // => add Projects(10, "another project") to "Project" table
+  // => add (10, "root") to "Applicant"
+
+#+end_src
+
+Being the "owning side" means that any update on the =projectses= fields of a
+=User= will do noting at all.
+
+#+begin_src java
+  Projects project1 = (Projects)session.get(Projects.class, new Long(1));
+  Users user = new Users("another", "password");
+  user.setProjectses(new HashSet<Projects>());
+  user.getProjectses().add(project1);
+
+  session.saveOrUpdate(user);
+
+  // => add  Users("another", "password") to table "User".
+  // => hava no effect on table "Applicant"
+#+end_src
+
+The "Applicant" table is the association table. If a many-to-many relationship
+is a defined by association table like "applicant", it will set the table =Project=
+as the "owner side" of this relationship while =User= is set as the "owning
+side".
+
+That is: Hibernate will set the table which the first foreign key of association
+table refers to as the owner of a many-to-many relationship. So if you want to
+make "user" the "owner side", just put "UID" at the first column of table
+"Applicant" when creating it.

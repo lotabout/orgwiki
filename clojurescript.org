@@ -1,0 +1,111 @@
+#+title: ClojureScript Notes
+
+* How do the backend and frontend work together?
+While I was studying reagent, a ClojureScript interface to React.js, I am
+confused about how the back-end and front-end worked together.
+
+** The original case
+For example, the backend had a data table with several columns, how do the
+backend pass the data to the frontend? In normal HTML way, we can have a route
+that fetch the whole page, and the page render(backend) will read the saved data
+and use it to render a page that contains data and send it to the client(front-end).
+
+#+begin_src clojure
+  (def data
+    [{:username "CS001" :password "cs001"}
+     {:username "CS002" :password "cs002"}
+     {:username "CS003" :password "cs003"}])
+
+  (defn show-table [data]
+    [:table
+     [:tr
+      [:th "Username"]
+      [:th "Password"]]
+     (for [row data]
+       [:tr
+        [:td (:username row)]
+        [:td (:password row)]])])
+
+  (defn test-page []
+    (hiccup.core/html (show-table data)))
+
+  (defroutes test-routes
+    (GET "/test" [] (test-page)))
+#+end_src
+
+Here when we request the page "/test", the server will render the page according
+to the =data= variable here. Imaging that we replace it with a retrieval call
+to database so that the data are transfered to the front-end.
+
+** New Scenario with Reagent
+When use Reagent or React.js, the recommended behavior is to let React take over
+all the render tasks. That means instead of rendering the page in the backend
+like what we did with =hiccup= in the above example, we apply the new scenario:
+
+1. write all the components in the frontend code.
+2. backend provide interface for fetch data(mainly ajax)
+3. react.js retrieve the data via ajax.
+
+#+begin_src clojure
+  (def data
+      [{:username "CS001" :password "cs001"}
+       {:username "CS002" :password "cs002"}
+       {:username "CS003" :password "cs003"}
+       {:username "中文" :password 123}])
+
+  (defroutes home-routes
+    (GET "/test" [] (response {:data data})))
+#+end_src
+
+Note that we use "luminus" here, and if the body of a response is a map, then
+the map will be transformed into json type. So that the client side's ajax
+request will get a json response.
+
+Now we compose the client side code:
+#+begin_src clojure
+  (defn datatable []
+    (let [user-data (atom nil)]
+      (GET "/test" {:handler #(reset! user-data (% "data"))})
+      (fn []
+        (.log js/console (str "datatable: " @user-data))
+        [:table
+         [:tr
+          [:th "Username"]
+          [:th "Password"]]
+         (for [row @user-data]
+           ^{:key (row "username")}
+           [:tr
+            [:td (row "username")]
+            [:td (row "password")]])])))
+
+  (defn mount-components []
+    (reagent/render-component [datatable] (.getElementById js/document "playground")))
+#+end_src
+
+In this way, it seems that we no longer uses the MVC pattern. The Model part can
+be all backend's work, and View part is now taken over by client side. And the
+Controller part can be implemented either by server side or client side.
+
+* Reagent tips
+
+* cljs-ajax notes
+
+An example of receiving =edn= response. Note that =:format= is used to specify
+the format to send to the server, and the =:response-format= is used to tell
+=cljs-ajax= about the response format from the server.
+
+#+begin_src clojure
+  (let [state (atom nil)]
+    (GET "/comments" {:response-format :edn
+                      :handler #(reset! state %)}))
+
+  (POST url {:headers {"x-csrf-token" (.-value (.getElementById js/document "token"))}
+                          :format :edn
+                          :params {:comment comment}
+                          :response-format :edn
+                          :handler #(reset! state %)})
+#+end_src
+
+Note that Luminus use CSRF by default, so we need to specify CSRF token in the
+header, check [[http://www.luminusweb.net/docs/security.md][Luminus Security]]
+for more details.

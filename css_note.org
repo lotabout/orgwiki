@@ -1,0 +1,220 @@
+#+title: CSS Notes
+
+* Elements
+
+** background
+1. background-image can stack.
+2. we can use transition on background-size and background-position, but we
+   have to manually set the begin value and end value(instead of leaving it blank.)
+3. If we use percentage value on =background-position=, it refer to the size of
+   the background positioning area minus size of background image; size refers
+   to the width for horizontal offsets and to the height for vertical offsets. 
+
+* Base Concept
+
+** Replaced element
+In short: it is an element whose content are replaced by outside source.
+
+For example: an =<img>= or =<video>= will depends on the =src= that the page
+specified. 
+
+By reference:
+#+begin_quote
+A replaced element is any element whose appearance and dimensions are defined by
+an external resource. Examples include images (<img> tags), plugins (<object>
+tags), and form elements (<button>, <textarea>, <input>, and <select> tags). All
+other elements types can be referred to as non-replaced elements.
+#+end_quote
+
+So why form elements are replaced elements? take =<select>= as an example, the
+width of a combobox are determined by the longest item in it. That means
+different combox can have different appearance and dimensions, and that depends
+on the external resource(i.e. the options).
+
+- [[http://reference.sitepoint.com/css/replacedelements][Replaced Elements]]
+- [[http://demosthenes.info/blog/461/What-The-Heck-Is-A-Replaced-Element][What the Heck is Replaced Element]]
+- 
+
+** Inline element
+An inline element occupies only the space bounded by the tags that define the
+inline element.
+
+The following elements are "inline":
+- b, big, i, small, tt
+- abbr, acronym, cite, code, dfn, em, kbd, strong, samp, var
+- a, bdo, br, img, map, object, q, script, span, sub, sup
+- button, input, label, select, textarea
+
+References:
+- [[https://developer.mozilla.org/en-US/docs/Web/HTML/Inline_elemente][Inline element]]
+
+** Intrinsic & Extrinsic Sizing
+Intrinsic sizing determines sizes based on the contents of an element, without
+regard for its context.
+
+*** Intrinsic Sizes of Replaced Elements
+
+- [[http://www.w3.org/TR/css3-sizing/][CSS 3 sizing]]
+
+
+* Rules
+
+** Calculating width and margin
+
+*** Inline non-replaced elements
+The _width_ property does not apply. A computed value of _auto_ for
+_margin-left_ or _margin-right_ becomes a used value of '0'.
+
+Such as =b=, =small=, =code= etc.
+
+*** Inline, replaced elements
+1: A computed value of _auto_ for _margin-left_ or _margin-right_ becomes a used
+value of '0'.
+
+2: If _height_ and _width_ both have computed values of 'auto' and the element also
+has an intrinsic width, then the intrinsic width is the used value of 'width'
+
+=> that means the natrual width of the content is used.
+
+3: If _height_ and _width_ both have computed values of 'auto' and the element has
+no intrinsic width, but does have an intrinsic height and intrinsic ratio; or if
+_width_ has a computed value of 'auto', _height_ has some other computed value,
+and the element does have an intrinsic ratio, then the used value of _width_ is:
+
+#+begin_example
+(used height) * (intrinsic ratio)
+#+end_example
+
+=> the problem is how to specify the intrinsic ratio? After searched for a
+while, I found that the intrinsic ratio is defined by setting percentage of _padding_.
+
+TODO: add more concrete example.
+
+4: too long, see the reference
+
+
+5: Otherwise if _width_ has a computed value of 'auto', and the element has an
+intrinsic width, then that intrinsic width is the used value of _width_.
+
+6: Don't care for now.
+
+*** Block-level, non-replaced elements in normal flow
+
+Constraints:
+
+#+begin_quote
+'margin-left' + 'border-left-width' + 'padding-left' + 'width' +
+'padding-right' + 'border-right-width' + 'margin-right' = width of the
+containing block
+#+end_quote
+
+=> i.e. check for the Box Model of CSS.
+
+1: If _width_ is not 'auto' and 'border-left-width' + 'padding-left' + 'width' +
+'padding-right' + 'border-right-width'(plus any of 'margin-left' or
+'margin-right' that are not 'auto') is larger than the width of the containing
+block, then any 'auto' values for 'margin-left' or 'margin-right' are, for the
+following rules, treated as zero.
+
+=> that means the 'auto' value is used for stretch.
+
+2: If all of the above have a computed value other than 'auto', the values are
+said to be "over-constrained" and one of the used values will have to be
+different from its computed value. If the _direction_ property of the containing
+block has the value 'ltr', the specified value of _margin-right_ is ignored and
+the value is calulated so as to make the equality true. Do the same for
+_margin-left_ when _direction_ is 'rtl'.
+
+=> that means one side of the margin is auto-ajusted(thus can be negative) to
+fit the containing block.
+
+3: If there is exactly one value specified as 'auto', its used value follows
+from the equality.
+
+4: If _width_ is set to 'auto', any other 'auto' values become '0' and _width_
+follows from the resulting equality. 
+
+5: If both _margin-left_ and _margin-right_ are 'auto', their used values are
+equal. Thus makes the element center.
+
+This rule is actually used for calculating the actual margin width, because the
+content is non-replaced, thus other component is not changable.
+
+- [[http://www.w3.org/TR/CSS21/visudet.html#the-width-property][The Width Property]]
+
+*** Blcok-level, replaced elements in normal flow
+The used value of _width_ is determined as for "inline replaced elements", then
+the rules for "non-replaced block-level elements" are applied to determin the margins.
+
+*** Floating, non-replaced elements
+1: If _margin-left_ or _margin-right_ are computed as 'auto', their used value is '0'.
+
+2: If _width_ is computed as 'auto', the used value is the "shrink-to-fit" width.
+
+*** Floating, replaced elements
+If _margin-left_ or _margin-right_ are computed as 'auto', their used value is
+'0'. The used value of _width_ is determined as for "inline replaced elements".
+
+*** Absolutely positioned, non-replaced elements
+The constraint that determins the used value for these elements is:
+#+begin_quote
+'left' + 'margin-left' + 'border-left-width' + 'padding-left' + 'width' +
+'padding-right' + 'border-right-width' + 'margin-right' + 'right' = width of
+containing block
+#+end_quote
+
+*** Summary
+=> Normally, the _width_ of a element is calculated from outside(container) to
+inside, while the margin is calculated from inside to outside. Only with
+replaced elements care the width of the elements inside it.
+
+=> _width_ of absolutely positioned elements also depends on its _left_ and
+_right_ property.
+
+=> The used _margin_ are used to decide the actually position to place
+elements. (such as calculate to be negtive, etc.)
+
+** Calculating height and margins
+
+*** Inline, non-replaced elements
+
+The _height_ rproperty does not apply. The height of the content area should be
+based on the font, but this specification does not specify how.
+
+The vertical padding, border and margin of an inline, non-replaced box start at
+the top and bottom of the content area, and has nothing to do with the
+_line-height_. But only the _line-height_ is used when calculating the height of
+the line box.
+
+*** Inline replaced elements, block-level replaced elements in normal flow, 'inline-block' replaced elements in normal flow and floating replaced elements
+If _margin-top_ or _margin-bottom_ are 'auto', their used value is 0.
+
+If _height_ and _width_ both have computed values of 'auto' and the element also
+has an intrinsic height, then that intrinsic height is the used value of _height_.
+
+Otherwise, if _height_ has a computed value of 'auto', and the element has an
+intrinsic ratio then the used value of _height_ is:
+#+begin_quote
+(used width) / (intrinsic ratio)
+#+end_quote
+
+Otherwise, If _height_ has a computed value of 'auto', and the element has an
+intrinsic height, then that intrinsic height is the used value of _height_.
+
+Otherwise, "currently don't care".
+
+*** Block-level non-replaced elements in normal flow when 'overflow' computes to 'visiable'
+If _margin-top_ or _margin-bottom_ are 'auto', their used value is 0. If
+_height_ is 'auto', the height depends on whether the element has any
+block-level children and whether it has padding or borders:
+
+The element's height is the distance from its top content edge to the first
+applicable of the following:
+1. the bottom edge of the last line box, if the box establishes an inline
+   formatting context with one or more lines.
+2. the bottom edge of the bottom(possibly collapsed) margin of its last in-flow
+   child, if the child's bottom margin does not collapse with the element's
+   bottom margin.
+3. the bottom border edge of the last in-flow child whose top margin doesn't
+   collapse with the element's bottom margin
+4. zero, otherwise
