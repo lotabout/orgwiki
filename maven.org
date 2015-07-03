@@ -81,3 +81,30 @@ mvn test
 
 
 - [[http://www.vineetmanohar.com/2009/11/3-ways-to-run-java-main-from-maven/][3 ways to run Java main from Maven]]
+
+** maven download metadata everytime
+
+Use offline mode to resolve this:
+
+#+begin_src sh
+mvn clean install -o
+#+end_src
+
+- [[http://stackoverflow.com/questions/16421454/why-maven-is-downloading-metadata-every-time]]
+
+** maven multi-thread build
+#+begin_src
+mvn -T 4 clean install # Builds with 4 threads
+mvn -T 1C clean install # 1 thread per cpu core
+mvn -T 1.5C clean install # 1.5 thread per cpu core
+#+end_src
+
+[[https://cwiki.apache.org/confluence/display/MAVEN/Parallel%2Bbuilds%2Bin%2BMaven%2B3][https://cwiki.apache.org/confluence/display/MAVEN/Parallel+builds+in+Maven+3]]
+
+
+** How to skip test
+#+begin_src sh
+mvn -Dmaven.test.skip=true or -DskipTests=true 
+#+end_src
+
+[[http://maven.apache.org/general.html#skip-test][Skip Test]]

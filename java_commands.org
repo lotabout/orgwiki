@@ -1,0 +1,9 @@
+#+title: JAVA Command Notes
+
+
+** List all files of a jar
+It is designed to behave like =tar= command.
+
+#+begin_src sh
+java tf xxx.jar
+#+end_src

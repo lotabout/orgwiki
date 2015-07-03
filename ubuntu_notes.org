@@ -1,0 +1,45 @@
+* Needed Software after installation
+1. vim && emacs
+2. tmux
+3. input method -- fcitx
+4. applets
+   1. indicator-multilaod
+
+* GUI's corrsponding CLI command
+- Ubuntu Software Center: =software-center=
+- System Settings: =unity-control-center=
+
+* Install JDK
+[[http://www.webupd8.org/2015/02/install-oracle-java-9-in-ubuntu-linux.html]]
+
+#+begin_src bash
+sudo add-apt-repository ppa:webupd8team/java
+sudo apt-get update
+sudo apt-get install oracle-java9-installer
+#+end_src
+
+* Samba Usage
+
+** smbclient login with guest no password.
+   Use the =-N= flag.
+#+begin_src bash
+smbclient -N smb://xxxx -U guest
+#+end-src
+
+* Problems and fixes
+
+  
+** Unity focus problem
+*Description*: 
+
+Using vimperator with firefox, when switch to another window
+(Alt-Tab for example), and swith back to firefox, firefox will lost
+all key stroks and thus vimperator fail to work.
+
+*Solution*
+
+As described
+[[http://askubuntu.com/questions/388153/ubuntu-13-10-not-usable-because-of-focus-problems][here]],
+we need to restart the X server. 
+
+For now, still not sure whether I had to do it everytime.

@@ -1,0 +1,21 @@
+#+title: Linux Mint installation
+
+
+* Additional installation
+- tmux
+- xterm
+
+* Development Environment Settings
+- git
+- maven
+- java8 && java6
+- vim && emacs
+
+* Settings
+- setup shortcut key for volume control
+- add applets
+  - change the window list to "Window List With App Grouping" which
+    simulates Windows7+ behavior.
+  - Network Data Usage Monitor -- to show the network speed
+  - Disk Utilization -- to see the disk IO usage.
+  - weather -- actually not that necessary, for display weather.
