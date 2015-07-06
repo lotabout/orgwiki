@@ -22,12 +22,12 @@ sudo apt-get install oracle-java9-installer
 
 ** smbclient login with guest no password.
    Use the =-N= flag.
-#+begin_src bash
+
+#+begin_src sh
 smbclient -N smb://xxxx -U guest
-#+end-src
+#+end_src
 
 * Problems and fixes
-
   
 ** Unity focus problem
 *Description*: 
@@ -43,3 +43,63 @@ As described
 we need to restart the X server. 
 
 For now, still not sure whether I had to do it everytime.
+** Default sh to bash instead of dash
+The =sh= command under ubuntu links to dash to provide fast startup
+and execution. Somehow some scripts that will depends on more
+advanced feature of =bash= while keep the sha-bang line link to =sh=,
+like:
+#+begin_src sh
+  #!/bin/sh
+  
+  # array syntax is supported by bash
+  array=("item 1" "item 2")
+#+end_src
+
+Thus it will not run properly. I googled for
+[[https://justinconover.wordpress.com/2012/05/14/ubuntu-changing-dash-to-bash/][this
+link]] to add alternative support for =sh=.
+
+#+begin_example
+$ sudo update-alternatives --install /bin/sh sh /bin/bash 100
+update-alternatives: using /bin/bash to provide /bin/sh (sh) in auto mode.
+
+$ sudo update-alternatives --install /bin/sh sh /bin/dash 200
+update-alternatives: using /bin/dash to provide /bin/sh (sh) in auto mode.
+
+$ sudo update-alternatives --config sh
+There are 2 choices for the alternative sh (providing /bin/sh).
+
+Selection Path Priority Status
+------------------------------------------------------------
+* 0 /bin/dash 2 auto mode
+1 /bin/bash 1 manual mode
+2 /bin/dash 2 manual mode
+
+Press enter to keep the current choice[*], or type selection number: 1
+update-alternatives: using /bin/bash to provide /bin/sh (sh) in manual
+mode.
+#+end_example
+
+** Remap keys
+
+*Description*
+
+I actually want to remap right context menu key to right control
+keys. And the problem is that Ubuntu do not work with =xmodmap=
+well. So we can
+[[https://radu.cotescu.com/remapping-keys-in-ubuntu-14.04/][remapping
+keys]] as the link described:
+
+*Solution*
+
+1. Edit file =/usr/share/X11/xkb/symbols/pc= and change the contents
+   accordingly:
+   #+begin_example
+     key <MENU> {[ Control_R ]};
+     modifier_map Control{ Control_L, Control_R, <MENU>}
+   #+end_example
+2. clear the =xkb= cache by:
+   #+begin_src sh
+     rm -rf /var/lib/xkb/*
+   #+end_src
+3. restart your X session.
