@@ -156,3 +156,266 @@ well, You can check the JQuery implementation
                    layer. Non-standard.
 
 [[http://web.jobbole.com/82419/][About JS event]]
+
+* Prototype
+Modifying the prototype of a javascript class(i.e. a function) will
+affect all instances using this object. It is like editing the class
+itself in Java and all instances of this class will be affected.
+
+[[http://www.w3schools.com/js/js_object_prototypes.asp][prototype]] is
+the only way of doing this.
+
+* This
+NOTE: this section is maily taken from [[https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/this][MDN]]
+
+Normally,
+[[https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/this][this]]
+is determined by how a function is called. It cannot be set by
+assignment during execution.
+
+** Global context
+In global execution contex(outside of any function) =this= refers to
+the global object, whether in scrit mode or not.
+
+#+begin_src javascript
+  console.log(this.document === document); // true
+  
+  // In web browsers, the window object is also the global object:
+  console.log(this === window); // true
+#+end_src
+
+** Function context
+Inside a function, the value of =this= depends on how the function is
+called.
+
+*** Simple call
+#+begin_src javascript
+  function f1(){
+    return this;
+  }
+  
+  f1() === window; // global object
+#+end_src
+
+In this case, the value of =this= is not set by the call. Since the
+code is not in =strict= mode, the value of =this= must always be an
+object so it defaults to the global object.
+
+#+begin_src javascript
+  function f2(){
+    "use strict"; // see strict mode
+    return this;
+  }
+  
+  f2() === undefined;
+#+end_src
+
+In =strict= mod,e the value of =this= remains at whatever it is set
+when entering the execution context.
+
+*** As an object method
+When a function is called as a method of an object, its =this= is set
+to the object the method is called on.
+
+#+begin_src javascript
+  var o = {
+      prop: 37,
+      f: function() {
+          return this.prop;
+      }
+  };
+  
+  console.log(o.f()); // logs 37
+#+end_src
+
+This behavior is not at all affected by how or where the function was defined.
+
+#+begin_src javascript
+  var o = {prop: 37};
+  
+  function independent() {
+    return this.prop;
+  }
+  
+  o.f = independent;
+  
+  console.log(o.f()); // logs 37
+#+end_src
+
+*** As a constructor
+when a function is used as a constructor(with the =new= keyword), its
+=this= is bound to the new object being constructed.
+
+*** call and apply
+By utilizing =call= and =apply=, we are able to specify =this= in a
+function to anything we want:
+#+begin_src javascript
+  function add(c, d){
+    return this.a + this.b + c + d;
+  }
+  
+  var o = {a:1, b:3};
+  
+  // The first parameter is the object to use as
+  // 'this', subsequent parameters are passed as 
+  // arguments in the function call
+  add.call(o, 5, 7); // 1 + 3 + 5 + 7 = 16
+  
+  // The first parameter is the object to use as
+  // 'this', the second is an array whose
+  // members are used as the arguments in the function call
+  add.apply(o, [10, 20]); // 1 + 3 + 10 + 20 = 34
+#+end_src
+
+** As a DOM event handler
+When a function is used as an event handler, its =this= is set to the
+element the event fired from.
+
+** As an in-line event handler
+Its =this= is set to the DOM element on which the listener is placed.
+
+** Read More
+- [[http://web.jobbole.com/54267/][解密 JavaScript 中的 this]]
+
+* Javascript and OOP
+
+Actually ECMAScript 2015(ES6) introduced some new keywords to support
+OOP in javascript. But we can actually simulate the OOP in older
+versions. Here are something to note when implement it.
+
+*Two things* we need to care about are:
+1. How to inherit properties and methods from the super class?
+2. How to properly set the initial values of inherited properties?
+
+** The inheritance chain
+The first is called to
+[[http://stackoverflow.com/questions/4152931/javascript-inheritance-call-super-constructor-or-use-prototype-chain][construct
+a prototype chain]]. Which is a function like this:
+
+#+begin_src javascript
+  function extend(base, sub) {
+    // Avoid instantiating the base class just to setup inheritance
+    // See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create
+    // for a polyfill
+    // Also, do a recursive merge of two prototypes, so we don't overwrite 
+    // the existing prototype, but still maintain the inheritance chain
+    // Thanks to @ccnokes
+    var origProto = sub.prototype;
+    sub.prototype = Object.create(base.prototype);
+    for (var key in origProto)  {
+       sub.prototype[key] = origProto[key];
+    }
+    // Remember the constructor property was set wrong, let's fix it
+    sub.prototype.constructor = sub;
+    // In ECMAScript5+ (all modern browsers), you can make the constructor property
+    // non-enumerable if you define it like this instead
+    Object.defineProperty(sub.prototype, 'constructor', { 
+      enumerable: false, 
+      value: sub 
+    });
+  }
+#+end_src
+
+With the help of the lookup strategy of Javascript's prototype, now
+we inherited parent's properties and methods(called prototype).
+
+** The constructor hierarchy
+In traditional OOP language like java, we will initialize the
+properties in its constructor, and when it is inherited by a
+subclass, we should call its constructor in the subclass to get the
+things right.
+
+#+begin_src java
+public class Shape {
+    private String shape;
+
+    Shape(String shape) {
+        this.shape = shape;
+    }
+
+    String getShape() {
+        return shape;
+    }
+}
+public class Rect extends Shape {
+    private int width;
+    private int height;
+    Rect() {
+        super("rect");
+        width = 0;
+        height = 0;
+    }
+
+    public static void main(String[] args) {
+        Rect rect = new Rect();
+        System.out.println(rect.getShape());
+    }
+}
+#+end_src
+
+Note the call to =super= which in this case refer to constructor =Shape(String)=.
+
+Although we've constructed the inheritance chain, the properties that
+are set via the constructor can not be conveniently set in the sub
+class. Here is a way to directly call the constructor of the super
+class:
+
+#+begin_src javascript
+  function Shape(shape) {
+      this.shape = shape;
+  }
+  
+  Shape.prototype.getShape = function () {
+      return this.shape;
+  }
+  
+  function Rect() {
+      // should call the super class
+      Shape.call(this, "rect")
+  }
+  
+  extend(Shape, Rect);
+  
+  var rect = new Rect();
+  console.log(rect.getShape());
+#+end_src
+
+The problem is with the =extend= utility, we actually haven't decide
+which super class we are going to extend, that means we don't know
+the name of =Shape= when we write =Rect()=. And under ECMAScript
+2015, we don't have the =super= keyword to refer to the constructor.
+
+So we need to save the super class's constructor. Below is the
+modified version of =extend=:
+#+begin_src java
+  function extend(base, sub) {
+      var origProto = sub.prototype;
+      sub.prototype = Object.create(base.prototype);
+      for (var key in origProto)  {
+          sub.prototype[key] = origProto[key];
+      }
+  
+      // save the super class's constructor.
+      sub.prototype.superConstructor = base.prototype.constructor
+  
+      sub.prototype.constructor = sub;
+      Object.defineProperty(sub.prototype, 'constructor', { 
+          enumerable: false, 
+          value: sub 
+      });
+  }
+#+end_src
+
+Now it's time to replace the call to =Shape=:
+#+begin_src javascript
+  function Rect() {
+      this.superConstructor.call(this, "rect")
+  }
+#+end_src
+
+And we get the same result.
+
+In this way, we get the basic OOP out of javascript, however, there
+is no default call to super class's default constructor. So we should
+manually call it every time. Please think about what you can do to
+enhance it.
