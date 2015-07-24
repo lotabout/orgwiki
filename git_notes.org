@@ -14,3 +14,22 @@ rebasing and stop at every marked commit. For each of those, do a =git
 commit –amend -m 'new messag'= and =git rebase --continue=
 
 - [[http://makandracards.com/makandra/868-change-commit-messages-of-past-git-commits][Change commit message of past git commits]]
+
+** ignore changes in tracked file
+I am facing the situation that I need to change some configuration
+file locally, and don't want it to be tracked by git. 
+
+A direct though would be adding it to =.gitignore=, which however
+will not work. Git will track a file once it is tracked.
+
+So
+[[http://blog.pagebakers.nl/2009/01/29/git-ignoring-changes-in-tracked-files/][here]]
+is the solution:
+
+#+begin_src sh
+git update-index --assume-unchanged <file>
+
+# If you wanna start tracking changes again run the following command:
+git update-index --no-assume-unchanged <file>
+#+end_src
+That is it!

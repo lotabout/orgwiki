@@ -1,0 +1,400 @@
+#+title: Reagent Tutorial
+
+This artical is a walkthrough of React.js quickstart tutorial using Reagent.
+
+* Create the testing project
+Use the =reagent= template by:
+
+#+begin_src sh
+  lein new reagent reagent-tutorial
+#+end_src
+
+Now start figwheel to enable auto compilation of cljs codes and auto
+reload js code to our page.
+
+#+begin_src sh
+  cd reagent-tutorial
+  lein figwheel
+#+end_src
+
+After starting it up, we open the page at [[http://localhost:3449/]],
+and see the page containing "Welcome to reagent-tutorial".
+
+* Walk through the tutorial
+The react.js quick-start tutorial is
+[[https://facebook.github.io/react/docs/tutorial.html]].
+
+We are trying to implement the functions in Reagent.
+
+** Your first component
+We build a =CommentBox= component:
+#+begin_src javascript
+  // tutorial1.js
+  var CommentBox = React.createClass({
+    render: function() {
+      return (
+        <div className="commentBox">
+          Hello, world! I am a CommentBox.
+        </div>
+      );
+    }
+  });
+  React.render(
+    <CommentBox />,
+    document.getElementById('content')
+  );
+#+end_src
+
+Open the =core.cljs= file in =src/cljs/reagent_tutorial= directory.
+
+First we create a corresonding comment box:
+#+begin_src clojure
+  (defn comment-box []
+    [:div.commentBox
+     "Hello, world! I am a CommentBox."])
+#+end_src
+
+And modify the render function =mount-root= to:
+#+begin_src clojure
+  (defn mount-root []
+      (reagent/render [comment-box] (.getElementById js/document "app")))
+#+end_src
+
+And You should see that the page's content had chaned to "Hello, world! I am a CommentBox.".
+
+** Composing components
+Now we are tring to build the skeletons for =CommentList= and =CommentForm=.
+#+begin_src javascript
+  // tutorial2.js
+  var CommentList = React.createClass({
+    render: function() {
+      return (
+        <div className="commentList">
+          Hello, world! I am a CommentList.
+        </div>
+      );
+    }
+  });
+
+  var CommentForm = React.createClass({
+    render: function() {
+      return (
+        <div className="commentForm">
+          Hello, world! I am a CommentForm.
+        </div>
+      );
+    }
+  });
+
+  // tutorial3.js
+  var CommentBox = React.createClass({
+    render: function() {
+      return (
+        <div className="commentBox">
+          <h1>Comments</h1>
+          <CommentList />
+          <CommentForm />
+        </div>
+      );
+    }
+  });
+#+end_src
+
+And change them to corresonding reagent (nothing to explain):
+
+#+begin_src clojure
+  (defn comment-list []
+    [:div.commentList
+     "Hello, world! I am a CommentList"])
+
+  (defn comment-form []
+    [:div.commentForm
+     "Hello, world! I am a CommentForm"])
+
+  (defn comment-box []
+    [:div.commentBox
+     [:h1 "Comments"]
+     [comment-list] 
+     [comment-form]])
+#+end_src
+
+Done, the page should be updated automatically(all hail figwheel).
+
+** Using Props
+We can pass information from the parent node to child node, which is
+called props in child. So when we want to construct a =Comment=, we
+can specify the information it needed: author and content:
+
+#+begin_src js
+  // tutorial4.js
+  var Comment = React.createClass({
+    render: function() {
+      return (
+        <div className="comment">
+          <h2 className="commentAuthor">
+            {this.props.author}
+          </h2>
+          {this.props.children}
+        </div>
+      );
+    }
+  });
+#+end_src
+
+And we can specify the information(props) via:
+
+#+begin_src js
+  // tutorial5.js
+  var CommentList = React.createClass({
+    render: function() {
+      return (
+        <div className="commentList">
+          <Comment author="Pete Hunt">This is one comment</Comment>
+          <Comment author="Jordan Walke">This is *another* comment</Comment>
+        </div>
+      );
+    }
+  });
+#+end_src
+
+First, note the props are accessed by =this.props=. Second, the
+=props= contains a special item called =props.children= which refer to
+the wrapped content in the parent.
+
+*** Reagent's Components As Functions
+As we had seen, the components in reagent are just like functions in
+clojure. So there better be a way to specify the props.
+
+The first one is abstract it like function called.
+#+begin_src clojure
+  (defn comment-item [author & children]
+    (into [:div.comment
+           [:h2.commentAuthor author]]
+          children))
+
+  (defn comment-list []
+    [:div.commentList
+     [comment-item "Pete Hunt" "This is one comment"]
+     [comment-item "Jordan Walke" "This is *another* comment"]])
+#+end_src
+
+*** A Little Test of Reagent's Props
+According to
+[[https://reagent-project.github.io/news/any-arguments.html][Reagent
+News]], the function conversion described above was introduced recently. 
+
+#+begin_src clojure
+  (ns example
+      (:require [reagent.core :as r :refer [atom]]))
+
+  (defn my-div []
+    (let [this (reagent/current-component)]
+      (into [:div.custom (reagent/props this)]
+            (reagent/children this))))
+
+  (defn call-my-div []
+    [:div
+     [my-div "Some text."]
+     [my-div {:style {:font-weight 'bold}}
+      [:p "Some other text in bold."]
+      [:p "some other text"]]])
+#+end_src
+
+So now =(reagent/props this)= will be the map ={:style {:font-weight
+'bold}}=, and =(reagent/children this)= will be a list of two
+components: =[[:p "Some other text in bold."] [:p "some other
+text"]]=. That is also the reason that we need to call =into= function
+to concate two list.
+
+Also, if you omit the properties in the caller like:
+#+begin_src clojure
+  (defn call-my-div []
+    [:div
+     [my-div "Some text."]
+     [my-div ; removed the properties here
+      [:p "Some other text in bold."]
+      [:p "some other text"]]])
+#+end_src
+
+The child simply got nothing(nil) calling to =(reagent/props this)=.
+
+The syntax is a bit tedious, but works, right?
+
+But what is we want to combine the properties and the convenience of
+function calls? Now we write a component to check the result:
+
+#+begin_src clojure
+  (defn comment-item [first-comp & rest-comp]
+    (let [this (reagent/current-component)]
+      [:div
+       [:p "The 'props' propertity: " (str (reagent/props this))]
+       [:p "The first component: " (str first-comp)]
+       [:p "The rest component: " (str rest-comp)]
+       [:p "The children component: " (str (reagent/children this))]]))
+#+end_src
+
+And by using a map as the first argument:
+#+begin_src clojure
+  (defn comment-list []
+    [:div
+     [comment-item {:author "Your Name"}
+      [:p "first component"]
+      [:p "second component"]]])
+#+end_src
+
+The result is:
+#+begin_example
+  The 'props' propertity: {:author "Your Name"}
+  The first component: {:author "Your Name"}
+  The rest component: ([:p "first component"] [:p "second component"])
+  The children component: [[:p "first component"] [:p "second component"]]
+#+end_example
+
+And by using a none-map as the first argument:
+#+begin_src clojure
+  (defn comment-list []
+    [:div
+     [comment-item ; note the map is deleted here
+      [:p "first component"]
+      [:p "second component"]]])
+#+end_src
+
+#+begin_example
+  The 'props' propertity:
+  The first component: [:p "first component"]
+  The rest component: ([:p "second component"])
+  The children component: [[:p "first component"] [:p "second component"]]
+#+end_example
+
+*** A Simple Conclusion of Props in Reagent
+1. You can retrieve the properties using =(reagent/props component-reference)=.
+2. The =props= refers to the first parameter given by the caller/parent if it
+   is a map.
+3. The =children= refers to the list of parameters given by the
+   caller/parent other than the first parameter if it is a map.
+
+*** A Test Combination of Props and Functions
+This can serve as an example when you really need the props, otherwise
+use the component as functions would do all the goods. 
+
+#+begin_src clojure
+  (defn comment-item [props & children]
+    [:div.comment
+     (into [:p.commentAuthor {:style (:style props)} (:author props)]
+           children)])
+
+  (defn comment-list []
+    [:div.commentList
+     [comment-item {:author "Pete Hunt"} "This is one comment"]
+     [comment-item {:author "Jordan Walke" :style {:font-weight 'bold}} "This is *another* comment"]])
+#+end_src
+
+I personally thinks that you will need this only when you cannot
+determine the number of properties you will use.
+
+** Hook up the data model
+We can pass data into components.
+#+begin_src js
+  // tutorial8.js
+  var data = [
+    {author: "Pete Hunt", text: "This is one comment"},
+    {author: "Jordan Walke", text: "This is *another* comment"}
+  ];
+
+  // tutorial9.js
+  var CommentBox = React.createClass({
+    render: function() {
+      return (
+        <div className="commentBox">
+          <h1>Comments</h1>
+          <CommentList data={this.props.data} />
+          <CommentForm />
+        </div>
+      );
+    }
+  });
+
+  React.render(
+    <CommentBox data={data} />,
+    document.getElementById('content')
+  );
+
+  // tutorial10.js
+  var CommentList = React.createClass({
+    render: function() {
+      var commentNodes = this.props.data.map(function (comment) {
+        return (
+          <Comment author={comment.author}>
+            {comment.text}
+          </Comment>
+        );
+      });
+      return (
+        <div className="commentList">
+          {commentNodes}
+        </div>
+      );
+    }
+  });
+#+end_src
+
+We pass the data from the top =CommentBox= and pass the data to its
+children accordingly. In reagent, this can be implemented smoothly.
+
+#+begin_src clojure
+  (def data [{:author "Pete Hunt", :text "This is one comment"}
+             {:author "Jordan Walke", :text "This is *another* comment"}])
+
+  (defn comment-item [author & children]
+      (into [:div.comment
+             [:h2.commentAuthor author]]
+            children))
+
+  (defn comment-list [data]
+    [:div.commentList
+     (for [comment data]
+       [comment-item (:author comment) (:text comment)])])
+
+  (defn comment-form []
+    [:div.commentForm
+     "Hello, world! I am a CommentForm"])
+
+  (defn comment-box [data]
+    [:div.commentBox
+     [:h1 "Comments"]
+     [comment-list data] 
+     [comment-form]])
+
+  (defn mount-root []
+      (reagent/render [comment-box data] (.getElementById js/document "app")))
+#+end_src
+
+** Reactive state
+The original document says a lot about AJAX calls to fetch the data, I
+found it irrelevant to React.js. So I'll only explain the following
+things:
+
+1. The state in React.js are represented as 'Atom' in Reagent
+2. According to [[https://github.com/reagent-project/reagent][reagent
+   doc]], you can return a new function while defining components, so
+   as to avoid usage of =getInitialState= and =componentDidMount=.
+
+Make change to =comment-box= and =comment-list=
+#+begin_src clojure
+  (ns reagent-tutorial.core
+      (:require [reagent.core :as reagent :refer [atom]]))
+
+  (defn comment-box []
+    (let [data (atom data)]
+      ;; you can add ajax callback here
+      (fn []
+        [:div.commentBox
+         [:h1 "Comments"]
+         [comment-list data] 
+         [comment-form]])))
+
+  (defn comment-list [data]
+    [:div.commentList
+     (for [comment @data]
+       [comment-item (:author comment) (:text comment)])])
+#+end_src

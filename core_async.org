@@ -1,0 +1,13 @@
+#+title: Core.async Notes
+
+* Notes
+
+** Function inside go block
+   you cannot use =<!= =>!= inside function/loop even they are wrapped
+   inside =go= block
+   #+begin_src clojure
+    (go (map <! some-chan))
+   #+end_src
+
+   [[http://stackoverflow.com/questions/26040928/couldnt-use-for-loop-in-go-block-of-core-async][Here]]
+   is a good explanation of why.
