@@ -1,0 +1,112 @@
+#+title: Emacs Helm Notes
+
+I personally just want to get vim's
+[[https://github.com/kien/ctrlp.vim][ctrlp]] in Emacs. And
+[[https://github.com/emacs-helm/helm][helm]] is the replacement, But
+after tring it, I found it *really* powerful.
+
+[[http://tuhdo.github.io/helm-intro.html][Here]] is a very good
+introduction of it.
+
+* Installation
+With Emacs package manage system, it is quite easy.
+#+begin_example
+M-x package-install RET helm RET
+M-x package-install RET helm-projectile RET
+#+end_example
+
+Note you don't need =helm-projectile= perhapse, but I recommand it. 
+
+And below is the configuration I had based on the
+[[http://tuhdo.github.io/helm-intro.html][introduction page]]
+#+begin_src emacs-lisp
+(require 'helm-config)
+
+(when (package-installed-p 'helm)
+  ;; change default prefix key
+  (global-set-key (kbd "C-c h") 'helm-command-prefix)
+  (global-unset-key (kbd "C-x c"))
+
+  ;; helm-M-x
+  (setq helm-M-x-fuzzy-match t)
+  (global-set-key (kbd "M-x") 'helm-M-x)
+
+  ;; helm-kill-ring
+  (global-set-key (kbd "M-y") 'helm-show-kill-ring)
+
+  ;; helm-mini
+  (global-set-key (kbd "C-x b") 'helm-mini)
+  (setq helm-buffers-fuzzy-matching t
+	helm-recentf-fuzzy-match t)
+
+  ;; helm-find-files
+  (global-set-key (kbd "C-x C-f") 'helm-find-files)
+  )
+
+;;; -----------------------------
+;;; helm-projectile
+(when (package-installed-p 'helm-projectile)
+  (projectile-global-mode)
+  (helm-projectile-on)
+  )
+#+end_src
+
+* Usage
+Actually I write this to keep a memo. It provides so many functions
+that I cannot remember them all. Basic function that replace the
+default like =M-x=, show-kill-ring, switch buffer, etc are directly
+achieved by remapping the key to helm version of functions.
+
+So I'll introduce those I cannot get intuitively.
+
+** find-files
+=helm-find-files= replace the default =find-files= function which
+normally binds to key =C-x C-f=.
+
+- select current directory by =C-j=. That means helm will continue
+  with the current selected directory.
+- open current directory in dired by =RET=. That means helm will quit,
+  the directory is opend in dired.
+
+** find
+Helm can invoke Linux =find= utility and filter the result based on
+the pattern you input. =find-files= is boring and inefficient some
+times, this _find_ utility is more =ctrlp= like.
+
+- =<prefix> /= to invoke =helm-find= on current directory.
+- =C-u <prefix> /= to prompt for the starting directory to find.
+
+If the directory is too large, =helm-find= will be slow for instant
+update, toggle with =C-!=.
+
+As an alternative, you can use =locate= command instead of =find=.
+- =<prefix> l= to invoke =helm-locate=
+
+** projectile
+=helm-projectile= provide good support to another plugin:
+=projectile=. I use in only to select files.
+
+- =C-c p f= to open selection dialog.
+- =C-c p h= to see help.
+
+=projectile= will automatically detect git/svn/hg, etc projects.
+
+** grep
+If your are selecting files or directorys via =helm-find-files=, you
+can invoke =grep= on current selected entry.
+
+- =C-s= to search on current selected files.
+- =C-u C-s= to search recursively(if you select a directory).
+
+The advantage of helm-grep is you get instant result updates on any keystrokes.
+
+** search
+This is a replacement of =C-u C-s= of emacs(=isearch= with regular expression.)
+
+- =<prefix> r= to invoke =helm-regexp=.
+
+** top
+Helm provide a =top= interface as alternative of system's =top=
+command.
+
+- =<prefix> t= to invoke =helm-top=.
